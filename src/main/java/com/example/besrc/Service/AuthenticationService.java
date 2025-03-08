@@ -1,0 +1,21 @@
+package com.example.besrc.Service;
+
+import com.example.besrc.ServerResponse.MyApiResponse;
+import com.example.besrc.ServerResponse.AuthenticationResponse;
+import com.example.besrc.requestClient.LoginRequest;
+import com.example.besrc.requestClient.SignUpRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public interface AuthenticationService {
+    public MyApiResponse signUp(SignUpRequest request, String ip);
+    public AuthenticationResponse refreshAccessToken(String token, HttpServletRequest request);
+    @Transactional
+    public AuthenticationResponse logIn(LoginRequest request, HttpServletRequest servletRequest, boolean adminLogIn);
+    public ResponseEntity<?> verifyEmail(String email, String code, HttpServletResponse response);
+    public boolean isEmailRegistered(String email);
+}
