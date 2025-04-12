@@ -1,0 +1,98 @@
+package com.example.besrc.Configuration;
+
+import com.example.besrc.Exception.CustomAccessDeniedHandler;
+import com.example.besrc.Exception.CustomAuthenticationEntryPoint;
+import com.example.besrc.Security.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfiguration {
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Cấu hình CORS
+                .csrf(AbstractHttpConfigurer::disable)
+
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/film/getFilm/**").permitAll()
+                        .requestMatchers("/api/film/getFilms").permitAll()
+                        .requestMatchers("/api/film/getFilmsByStatus").permitAll()
+                        .requestMatchers("/largeImages/**").permitAll()
+                        .requestMatchers("/filmImages/**").permitAll()
+                        .requestMatchers("/api/film/searchFilmsByPrefix").permitAll()
+                        .requestMatchers("/api/account/getMyAccountInformation").authenticated()
+                        .requestMatchers("/api/show/getByFilm").permitAll() // ✅ Thêm dòng này để API hiển thị lịch chiếu không cần đăng nhập
+                        .requestMatchers("/api/account/update-profile").authenticated() // ✅ THÊM DÒNG NÀY
+                        .requestMatchers("/api/account/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
+                        .requestMatchers("/api/account/superadmin/**").hasAuthority("ROLE_SUPER_ADMIN")
+                        .requestMatchers("/api/hall/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
+                        .requestMatchers("/api/auth/verify/**").permitAll()
+                        .requestMatchers("/api/seat/status/{showId}/{status}").permitAll()
+                        .requestMatchers("/api/seat/type/{showId}/{seatType}").permitAll()
+                        .requestMatchers("/api/seat/{showId}/{seatId}/index").permitAll()
+                        .requestMatchers("/api/show/{showId}/seats").permitAll()
+                        .requestMatchers("/api/feedback/add").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(customAuthenticationEntryPoint())
+                        .accessDeniedHandler(customAccessDeniedHandler())
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    // Cấu hình nguồn CORS
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Chỉ định domain frontend
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    // Xử lý lỗi khi người dùng chưa xác thực
+    @Bean
+    public AuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return new CustomAuthenticationEntryPoint();
+    }
+
+    // Xử lý lỗi khi người dùng đã xác thực nhưng không có quyền
+    @Bean
+    public AccessDeniedHandler customAccessDeniedHandler() {
+        return new CustomAccessDeniedHandler();
+    }
+}

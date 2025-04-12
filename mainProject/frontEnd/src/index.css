@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #0f0f0f;
+  color: white
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes glowing {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(255, 0, 0, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.4);
+  }
+}
+
+.animate-zoomIn {
+  animation: zoomIn 1s ease-in-out;
+}
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-in-out;
+}
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+.hover\:shadow-glow:hover {
+  animation: glowing 1.5s infinite alternate;
+  border: 2px solid rgba(255, 0, 0, 0.8);
+  border-radius: 10px;
+}
+.nav-item {
+  position: relative;
+  transition: color 0.3s ease-in-out;
+}
+
+.nav-item::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -3px;
+  width: 0;
+  height: 2px;
+  background-color: red;
+  transition: all 0.3s ease-in-out;
+}
+
+.nav-item:hover::after {
+  width: 100%;
+  left: 0;
+}
+.hover-border-white:hover {
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.group:hover img {
+  filter: brightness(0.7);
+}
+
+.group:hover .movie-info {
+  opacity: 1;
+  transform: translateY(0);
+}

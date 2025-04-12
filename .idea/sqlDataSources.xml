@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DdlMappings">
+    <mapping uuid="60c7a454-e25b-4e14-9274-2138cafd3d59" name="ticket_db@localhost Mapping">
+      <data-sources db="a8101534-1a96-4743-92c9-2e54cfa3bd76" ddl="7dc1b9ab-e59e-46e3-96b5-393390c75594" />
+      <scope>
+        <node kind="database" qname="@" />
+      </scope>
+    </mapping>
+    <mapping uuid="80710672-56db-4d2f-a5f4-f1b197004e48" name="ticketDB@localhost Mapping">
+      <data-sources db="0ecf1f54-ba0e-49a6-94cc-509ef80e0a23" ddl="7dc1b9ab-e59e-46e3-96b5-393390c75594" />
+      <scope>
+        <node kind="database" qname="@" />
+      </scope>
+    </mapping>
+    <mapping uuid="b56dde11-f91f-4d1a-b2f3-580e994e185d" name="DDL data source Mapping">
+      <data-sources db="0ecf1f54-ba0e-49a6-94cc-509ef80e0a23" ddl="d0f49f8c-a88a-4d94-b5fe-79543e8d7bdb" />
+      <scope>
+        <node kind="database" qname="@" />
+      </scope>
+    </mapping>
+    <mapping uuid="c648f0e0-db3b-43f4-a72c-39a1284c26ff" name="ticketDB Mapping">
+      <data-sources db="8bfafd79-c72d-48d4-ade0-2b7564b5894b" ddl="27d0c446-17ae-47b1-b33c-2c7afed19ac6" />
+      <scope>
+        <node kind="database" qname="@" />
+      </scope>
+    </mapping>
+  </component>
+</project>
