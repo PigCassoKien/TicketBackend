@@ -42,7 +42,7 @@ const makeAuthenticatedRequest = async (config) => {
 export const getAllHalls = async () => {
   return makeAuthenticatedRequest({
     method: "GET",
-    url: "http://localhost:8080/api/hall/all",
+    url: "https://localhost:8443/api/hall/all",
   });
 };
 
@@ -50,7 +50,7 @@ export const getAllHalls = async () => {
 export const getHallById = async (hallId) => {
   return makeAuthenticatedRequest({
     method: "GET",
-    url: `http://localhost:8080/api/hall/${hallId}`,
+    url: `https://localhost:8443/api/hall/${hallId}`,
   });
 };
 
@@ -58,7 +58,7 @@ export const getHallById = async (hallId) => {
 export const createHall = async (hallData) => {
   return makeAuthenticatedRequest({
     method: "POST",
-    url: "http://localhost:8080/api/hall/create",
+    url: "https://localhost:8443/api/hall/create",
     data: hallData,
     headers: {
       "Content-Type": "application/json",
@@ -70,7 +70,7 @@ export const createHall = async (hallData) => {
 export const updateHall = async (hallId, hallData) => {
   return makeAuthenticatedRequest({
     method: "PUT",
-    url: `http://localhost:8080/api/hall/update/${hallId}`,
+    url: `https://localhost:8443/api/hall/update/${hallId}`,
     data: hallData,
     headers: {
       "Content-Type": "application/json",
@@ -82,6 +82,6 @@ export const updateHall = async (hallId, hallData) => {
 export const deleteHall = async (hallId) => {
   return makeAuthenticatedRequest({
     method: "DELETE",
-    url: `http://localhost:8080/api/hall/delete/${hallId}`,
+    url: `https://localhost:8443/api/hall/delete/${hallId}`,
   });
 };

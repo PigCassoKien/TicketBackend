@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMoviesByStatus } from "../../api/filmApi.js";
-import Footer from "../../components/Footer";
+import Footer from "../../components/footer.jsx";
 
 // Hàm giới hạn số từ và thêm dấu "..." nếu vượt quá
 const truncateDescription = (text, maxWords = 20) => {
@@ -92,7 +92,7 @@ const AdminPage = () => {
                     <img
                       src={
                         movie.image
-                          ? `http://localhost:8080/filmImages/${movie.image}`
+                          ? `https://localhost:8443/filmImages/${movie.image}`
                           : "/placeholder.jpg"
                       }
                       alt={movie.title}
@@ -145,7 +145,7 @@ const AdminPage = () => {
                     <img
                       src={
                         movie.image
-                          ? `http://localhost:8080/filmImages/${movie.image}`
+                          ? `https://localhost:8443/filmImages/${movie.image}`
                           : "/placeholder.jpg"
                       }
                       alt={movie.title}

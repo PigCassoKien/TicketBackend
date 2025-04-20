@@ -1,5 +1,6 @@
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion"; // Import Framer Motion
 import { jwtDecode } from "jwt-decode";
 import Navbar from "./components/navbar";
 import RegisterModal from "./components/registerModal";
@@ -14,6 +15,7 @@ import ManageFilmsPage from "./fe-admin/pages/ManageFilmPage";
 import ManageShowtimesPage from "./fe-admin/pages/ManageShowtimesPage";
 import ProtectedRoute from "./components/ProtectRoute";
 import SearchResultsPage from "./pages/SearchResultPage";
+import PaymentPage from "./pages/PaymentPage";
 
 // Placeholder pages for navbar links
 const NewsPage = () => <div>Tin tức</div>;
@@ -32,6 +34,7 @@ export default function App() {
   const [authMode, setAuthMode] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation(); // Sử dụng useLocation để theo dõi route hiện tại
 
   const checkLoginStatus = () => {
     const token = localStorage.getItem("accessToken");
@@ -59,14 +62,13 @@ export default function App() {
       return;
     }
 
-    // Kiểm tra vai trò người dùng
-    let redirectPath = "/"; // Mặc định chuyển hướng về trang chủ
+    let redirectPath = "/";
     try {
       const decodedToken = jwtDecode(token);
       const roles = decodedToken.roles || [];
       const userRole = roles[0]?.replace("ROLE_", "");
       if (["ADMIN", "SUPER_ADMIN"].includes(userRole)) {
-        redirectPath = "/admin"; // Chuyển hướng đến trang admin nếu là ADMIN hoặc SUPER_ADMIN
+        redirectPath = "/admin";
       }
     } catch (error) {
       console.error("Lỗi khi giải mã token:", error);
@@ -74,7 +76,7 @@ export default function App() {
 
     setIsLoggedIn(true);
     setAuthMode(null);
-    navigate(redirectPath); // Chuyển hướng dựa trên vai trò
+    navigate(redirectPath);
   };
 
   const handleLogout = () => {
@@ -91,6 +93,19 @@ export default function App() {
     console.log("🔍 App.js - accessToken sau khi đăng xuất:", localStorage.getItem("accessToken"));
   };
 
+  // Animation variants
+  const pageVariants = {
+    initial: { opacity: 0, y: 20 },
+    in: { opacity: 1, y: 0 },
+    out: { opacity: 0, y: -20 },
+  };
+
+  const pageTransition = {
+    type: "tween",
+    ease: "anticipate",
+    duration: 0.5,
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0e0e10] app-container">
       <Navbar
@@ -100,98 +115,304 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      <Routes>
-        <Route path="/" element={<HomePage authMode={authMode} />} />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute setAuthMode={setAuthMode}>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/movie/:id"
-          element={
-            <MovieDetailPage
-              isLoggedIn={isLoggedIn}
-              setIsLoggedIn={setIsLoggedIn}
-            />
-          }
-        />
-        <Route path="/lich-chieu" element={<SchedulePage />} />
-        <Route path="/tin-tuc" element={<NewsPage />} />
-        <Route path="/khuyen-mai" element={<PromotionsPage />} />
-        <Route path="/gia-ve" element={<TicketPricePage />} />
-        <Route path="/lien-hoan-phim" element={<FilmFestivalPage />} />
-        <Route path="/gioi-thieu" element={<AboutPage />} />
-        <Route path="/search-results" element={<SearchResultsPage />} /> {/* Sửa từ /search thành /search-results */}
-        <Route
-          path="/tickets"
-          element={
-            <ProtectedRoute setAuthMode={setAuthMode}>
-              <TicketsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute setAuthMode={setAuthMode}>
-              <SettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        {/* Admin Routes */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
-              <AdminPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/users"
-          element={
-            <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
-              <ManageUsersPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/showtimes"
-          element={
-            <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
-              <ManageShowtimesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/films"
-          element={
-            <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
-              <ManageFilmsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/bookings"
-          element={
-            <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
-              <ManageBookingsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/payments"
-          element={
-            <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
-              <ManagePaymentsPage />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route
+            path="/"
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <HomePage authMode={authMode} />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute setAuthMode={setAuthMode}>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <ProfilePage />
+                </motion.div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/movie/:id"
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <MovieDetailPage
+                  isLoggedIn={isLoggedIn}
+                  setIsLoggedIn={setIsLoggedIn}
+                />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/lich-chieu"
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <SchedulePage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/tin-tuc"
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <NewsPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/khuyen-mai"
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <PromotionsPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/gia-ve"
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <TicketPricePage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/lien-hoan-phim"
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <FilmFestivalPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/gioi-thieu"
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <AboutPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/search-results"
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <SearchResultsPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/tickets"
+            element={
+              <ProtectedRoute setAuthMode={setAuthMode}>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <TicketsPage />
+                </motion.div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute setAuthMode={setAuthMode}>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <SettingsPage />
+                </motion.div>
+              </ProtectedRoute>
+            }
+          />
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <AdminPage />
+                </motion.div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <ManageUsersPage />
+                </motion.div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/showtimes"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <ManageShowtimesPage />
+                </motion.div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/films"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <ManageFilmsPage />
+                </motion.div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/bookings"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <ManageBookingsPage />
+                </motion.div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/payments"
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]} setAuthMode={setAuthMode}>
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <ManagePaymentsPage />
+                </motion.div>
+              </ProtectedRoute>
+            }
+          />
+          {/* Payment Route */}
+          <Route
+            path="/payment/:bookingId/:totalPrice/:seatCount"
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <PaymentPage
+                  isLoggedIn={isLoggedIn}
+                  onLogout={handleLogout}
+                  onLoginClick={() => setAuthMode("login")}
+                  onRegisterClick={() => setAuthMode("register")}
+                />
+              </motion.div>
+            }
+          />
+        </Routes>
+      </AnimatePresence>
 
       {authMode === "register" && (
         <RegisterModal

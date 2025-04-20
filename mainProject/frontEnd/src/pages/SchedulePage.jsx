@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Footer from "../components/Footer";
+import Footer from "../components/footer.jsx";
 import { getMoviesByStatus, getShowtimesByFilm } from "../api/filmApi.js";
 import LoginModal from "../components/loginModal";
 
@@ -151,7 +151,7 @@ const SchedulePage = () => {
                   <img
                     src={
                       movie.image
-                        ? `http://localhost:8080/filmImages/${movie.image}`
+                        ? `https://localhost:8443/filmImages/${movie.image}`
                         : "/placeholder.jpg"
                     }
                     alt={movie.title}

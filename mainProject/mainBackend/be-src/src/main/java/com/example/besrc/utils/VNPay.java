@@ -1,21 +1,22 @@
 package com.example.besrc.utils;
 
 import com.example.besrc.Entities.Payment;
+import com.google.gson.JsonObject;
 import jakarta.servlet.http.HttpServlet;
 import org.json.JSONObject;
-import com.google.gson.JsonObject;
-
 import org.springframework.web.server.ServerErrorException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -24,17 +25,24 @@ public class VNPay extends HttpServlet {
 
     private static final String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     private static final String vnp_Version = "2.1.0";
-    private static final String vnp_TmnCode = "064H1LVP";
-    private static final String vnp_HashSecret = "AEQQSYJOSEUTZRKRSQSLXXVLIASCSNXM";
-    private static final String vnp_Returnurl = "http://localhost/order-complete";
+    private static final String vnp_TmnCode = "S9J1L8QI";
+    private static final String vnp_HashSecret = "BI2UVPUUVRBTZTTBWO56PB48OZBUT37A";
+    private static final String vnp_Returnurl = "https://localhost:8443/api/payment/order-complete";
     private static final String vnp_apiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
 
+    public static String getVnp_TmnCode() {
+        return vnp_TmnCode;
+    }
     public static String create(Payment payment, String bankCode, String ip_address)
             throws ServerErrorException, IOException, NoSuchAlgorithmException {
         String vnpCommand = "pay";
 
         long amount = Math.round(payment.getAmount() * 100);
         String vnpTxnRef = payment.getPaymentId();
+
+        if (amount <= 0 || vnpTxnRef == null) {
+            throw new IllegalArgumentException("Invalid payment details");
+        }
 
         Map<String, String> vnpParams = new TreeMap<>();
 
@@ -44,16 +52,10 @@ public class VNPay extends HttpServlet {
         vnpParams.put("vnp_Amount", String.valueOf(amount));
         vnpParams.put("vnp_CurrCode", "VND");
         vnpParams.put("vnp_TxnRef", vnpTxnRef);
-        vnpParams.put("vnp_OrderInfo", "Thanh toan don hang " + bankCode);
+        vnpParams.put("vnp_OrderInfo", "Thanh toan don hang " + vnpTxnRef);
         vnpParams.put("vnp_Locale", "vn");
-        vnpParams.put("vnp_BankCode", "");
-        vnpParams.put("vnp_CreateDate", "");
-        vnpParams.put("vnp_IpAddr", ip_address);
+        vnpParams.put("vnp_IpAddr", ip_address != null ? ip_address : "127.0.0.1");
         vnpParams.put("vnp_ReturnUrl", vnp_Returnurl);
-        vnpParams.put("vnp_ExpireDate", "");
-        vnpParams.put("vnp_Bill_Mobile", "");
-        vnpParams.put("vnp_Bill_Email", "");
-        vnpParams.put("vnp_Bill_Fax", "");
         vnpParams.put("vnp_OrderType", "other");
 
         if (bankCode != null && !bankCode.isEmpty() && !bankCode.equals("VNPAY")) {
@@ -68,33 +70,34 @@ public class VNPay extends HttpServlet {
         String vnp_ExpireDate = simpleDateFormat.format(calendar.getTime());
         vnpParams.put("vnp_ExpireDate", vnp_ExpireDate);
 
-        List fieldNames = new ArrayList(vnpParams.keySet());
-        Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();
-        Iterator iterator = fieldNames.iterator();
+        Iterator<Map.Entry<String, String>> iterator = vnpParams.entrySet().iterator();
+        boolean first = true;
         while (iterator.hasNext()) {
-            String fieldName = (String) iterator.next();
-            String fieldValue = vnpParams.get(fieldName);
+            Map.Entry<String, String> entry = iterator.next();
+            String fieldName = entry.getKey();
+            String fieldValue = entry.getValue();
             if ((fieldValue != null) && (!fieldValue.isEmpty())) {
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(fieldValue);
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII));
-                query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
-                if (iterator.hasNext()) {
-                    hashData.append('&');
-                    query.append('&');
+
+                if (!first) {
+                    hashData.append("&");
+                    query.append("&");
                 }
+                hashData.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8))
+                        .append("=")
+                        .append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8))
+                        .append("=")
+                        .append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
+                first = false;
+
             }
         }
-        String queryUrl = query.toString();
-        String vnp_SecureHash = Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA256").digest(hashData.toString().getBytes(StandardCharsets.US_ASCII)));
-        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+        String vnp_SecureHash = hmacSHA512(hashData.toString());
 
-        return vnp_PayUrl + "?" + queryUrl;
+        query.append("&vnp_SecureHash=").append(vnp_SecureHash);
+        return vnp_PayUrl + "?" + query.toString();
     }
     /*
      * Return 0 -> Payment success
@@ -105,7 +108,7 @@ public class VNPay extends HttpServlet {
         return String.valueOf((Math.random() * (99999 - 10000)) + 10000);
     }
 
-    private static String hmacSHA512(final String data) {
+    public static String hmacSHA512(final String data) {
         try {
 
             if (data == null) {
@@ -171,11 +174,18 @@ public class VNPay extends HttpServlet {
         connection.setRequestProperty("Content-Length", String.valueOf(vnp_Params.toString().length()));
         connection.setDoOutput(true);
         DataOutputStream os = new DataOutputStream(connection.getOutputStream());
-        os.writeByte(Integer.parseInt(vnp_Params.toString()));
+        os.write(vnp_Params.toString().getBytes(StandardCharsets.UTF_8));
         os.flush();
         os.close();
 
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        BufferedReader bufferedReader;
+        int responseCode = connection.getResponseCode();
+        if (responseCode >= 200 && responseCode <= 300) {
+            bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        } else {
+            bufferedReader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+        }
+
         String output;
         StringBuilder response = new StringBuilder();
         while ((output = bufferedReader.readLine()) != null) {
@@ -183,33 +193,46 @@ public class VNPay extends HttpServlet {
         }
         bufferedReader.close();
 
-        JSONObject jsonObject = new JSONObject(response.toString());
+        if (responseCode >= 200 && responseCode < 300) {
+            JSONObject jsonObject = new JSONObject(response.toString());
 
-        String res_ResponseCode = (String) jsonObject.get("vnp_ResponseCode");
-        String res_TxnRef = (String) jsonObject.get("vnp_TxnRef");
-        String res_Message = (String) jsonObject.get("vnp_Message");
-        double res_Amount = Double.parseDouble((String) jsonObject.get("vnp_Amount")) / 100;
-        String res_TransactionType = (String) jsonObject.get("vnp_TransactionType");
-        String res_TransactionStatus = (String) jsonObject.get("vnp_TransactionStatus");
+            String res_ResponseCode = jsonObject.optString("vnp_ResponseCode", "99");
+            String res_TxnRef = jsonObject.optString("vnp_TxnRef", "");
+            String res_Message = jsonObject.optString("vnp_Message", "Unknown Error");
 
-        if (!res_ResponseCode.equals("00")) // Response Code invaild
+            double res_Amount = 0.0;
+            if (jsonObject.has("vnp_Amount")) {
+                try {
+                    res_Amount = Double.parseDouble(jsonObject.getString("vnp_Amount"));
+                } catch ( NumberFormatException e) {
+                    res_Amount = 0.0;
+                }
+            }
+
+            String res_TransactionType = jsonObject.optString("vnp_TransactionType", "");
+            String res_TransactionStatus = jsonObject.optString("vnp_TransactionStatus", "");
+
+            if (!res_ResponseCode.equals("00")) // Response Code invaild
+                return 1;
+
+            if (!res_TxnRef.equals(payment.getPaymentId())) // Payment ID not equal
+                return 1;
+
+            if (res_Amount != payment.getAmount()) // Amount payment not equal
+                return 2;
+
+            if (!res_TransactionType.equals("01")) // Transaction Type invaild
+                return 2;
+
+            if (res_TransactionStatus.equals("01")) // Transaction is pending
+                return 1;
+
+            if (!res_TransactionStatus.equals("00")) // Transaction Status invaild
+                return 2;
+
+            return 0;
+        } else {
             return 1;
-
-        if (!res_TxnRef.equals(payment.getPaymentId())) // Payment ID not equal
-            return 1;
-
-        if (res_Amount != payment.getAmount()) // Amount payment not equal
-            return 2;
-
-        if (!res_TransactionType.equals("01")) // Transaction Type invaild
-            return 2;
-
-        if (res_TransactionStatus.equals("01")) // Transaction is pending
-            return 1;
-
-        if (!res_TransactionStatus.equals("00")) // Transaction Status invaild
-            return 2;
-
-        return 0;
+        }
     }
 }

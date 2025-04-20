@@ -55,6 +55,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/seat/{showId}/{seatId}/index").permitAll()
                         .requestMatchers("/api/show/{showId}/seats").permitAll()
                         .requestMatchers("/api/feedback/add").permitAll()
+                        .requestMatchers("/api/payment/order-complete").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

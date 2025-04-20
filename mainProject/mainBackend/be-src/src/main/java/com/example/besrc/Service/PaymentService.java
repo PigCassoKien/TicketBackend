@@ -5,9 +5,12 @@ import com.example.besrc.ServerResponse.MyApiResponse;
 import com.example.besrc.ServerResponse.PaymentResponse;
 import com.example.besrc.requestClient.HashRequest;
 import com.example.besrc.requestClient.PaymentRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+
 @Service
 public interface PaymentService {
     public PaymentResponse create(String username, PaymentRequest request, String ip_addr);
@@ -18,4 +21,6 @@ public interface PaymentService {
 
     public String createHash(HashRequest rawdata);
     public void addPaymentMail(Payment payment);
+
+    Map<String, String> handleVNPayReturn(HttpServletRequest request);
 }

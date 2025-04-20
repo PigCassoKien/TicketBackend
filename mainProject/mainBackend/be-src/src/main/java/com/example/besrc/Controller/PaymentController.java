@@ -93,4 +93,14 @@ public class PaymentController {
     public ResponseEntity<?> getHash(@RequestBody @Valid HashRequest request) {
         return ResponseEntity.ok().body(paymentService.createHash(request));
     }
+
+    @GetMapping("/order-complete")
+    @Operation(summary = "Handle VNPay Return", responses = {
+            @ApiResponse(responseCode = "200",description = "Handle VNPay Return Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyApiResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<?> handleVNPayReturn(HttpServletRequest request) {
+        return ResponseEntity.ok().body(paymentService.handleVNPayReturn(request));
+    }
 }

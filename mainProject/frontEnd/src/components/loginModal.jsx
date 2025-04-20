@@ -26,7 +26,7 @@ const LoginModal = ({ isOpen, onClose, switchToRegister, onLoginSuccess }) => {
 
     try {
       console.log("🔍 Gửi yêu cầu đăng nhập với:", formData);
-      const response = await axios.post("http://localhost:8080/api/auth/login", formData);
+      const response = await axios.post("https://localhost:8443/api/auth/login", formData);
       console.log("📌 Phản hồi từ API:", response.data);
 
       const { token, refreshToken, username, email, fullName, phoneNumber } = response.data || {};

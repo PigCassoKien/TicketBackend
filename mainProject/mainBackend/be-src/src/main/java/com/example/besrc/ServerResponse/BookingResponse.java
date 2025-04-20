@@ -30,7 +30,7 @@ public class BookingResponse {
         this.hallName = booking.getShow().getHall().getName();
         this.startingTime = booking.getShow().getStartTime().toString();
         this.status = booking.getStatus().name();
-        this.createAt = booking.getShow().getCreateAt().toString();
+        this.createAt = booking.getCreateAt().toString();
     }
 
 }

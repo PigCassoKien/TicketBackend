@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Banner from "../components/banner";
 import MovieCarousel from "../components/movieCarousel";
-import Footer from "../components/Footer";
+import Footer from "../components/footer";
 import { getMoviesByStatus } from "../api/filmApi";
 
 const HomePage = ({ authMode }) => {

@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/MyProject.iml" filepath="$PROJECT_DIR$/.idea/MyProject.iml" />
       <module fileurl="file://$PROJECT_DIR$/mainProject/mainBackend/be-src/be-src.iml" filepath="$PROJECT_DIR$/mainProject/mainBackend/be-src/be-src.iml" />
     </modules>
   </component>

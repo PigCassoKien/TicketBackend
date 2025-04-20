@@ -318,7 +318,7 @@ const ManageShowtimes = () => {
       const token = localStorage.getItem("accessToken");
       const combinedDateTime = `${newShow.startDate}T${newShow.startTime}:00`;
       const response = await axios.post(
-        "http://localhost:8080/api/show/addShow",
+        "https://localhost:8443/api/show/addShow",
         {
           hallId: newShow.hallId,
           filmId: newShow.filmId, // Fixed typo: changed "fieldId" to "filmId"

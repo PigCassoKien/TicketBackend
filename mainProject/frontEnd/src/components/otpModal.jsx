@@ -51,7 +51,7 @@ const OtpModal = ({ isOpen, onClose, email }) => {
     setError("");
 
     try {
-      const response = await fetch(`http://localhost:8080/api/auth/verify/${email}/${enteredOtp}`, {
+      const response = await fetch(`https://localhost:8443/api/auth/verify/${email}/${enteredOtp}`, {
         method: "GET",
         credentials: "include",
       });

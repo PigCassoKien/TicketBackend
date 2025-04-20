@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
   const [vipSeats, setVipSeats] = useState([]);
@@ -7,8 +8,9 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [timer, setTimer] = useState(600); // 10 phút (600 giây)
+  const [timer, setTimer] = useState(600); // 10 minutes
   const [seatTypePrice, setSeatTypePrice] = useState({ VIP: 0, NORMAL: 0 });
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isOpen && showId) {
@@ -16,7 +18,7 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
       const countdown = setInterval(() => {
         setTimer((prev) => {
           if (prev === 1) {
-            onClose(); // Hết thời gian, tự đóng modal
+            onClose();
           }
           return prev > 0 ? prev - 1 : 0;
         });
@@ -28,16 +30,16 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
   const fetchSeats = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8080/api/show/${showId}/seats`);
+      const response = await axios.get(`https://localhost:8443/api/show/${showId}/seats`);
       const seatsData = response.data || [];
+
+      console.log("Seats from API:", seatsData);
 
       const vip = seatsData.filter((seat) => seat.type === "VIP");
       const normal = seatsData.filter((seat) => seat.type === "NORMAL");
 
       setVipSeats(vip);
       setNormalSeats(normal);
-
-      // Lưu giá theo loại ghế
       setSeatTypePrice({
         VIP: vip.length > 0 ? vip[0].price : 0,
         NORMAL: normal.length > 0 ? normal[0].price : 0,
@@ -52,11 +54,69 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
   };
 
   const toggleSeatSelection = (seat) => {
+    if (selectedSeats.length >= 8 && !selectedSeats.includes(seat)) {
+      setError("Bạn chỉ có thể chọn tối đa 8 ghế!");
+      return;
+    }
     setSelectedSeats((prev) =>
       prev.includes(seat)
         ? prev.filter((s) => s.seatId !== seat.seatId)
         : [...prev, seat]
     );
+  };
+
+  const handleCreateBooking = async () => {
+    if (selectedSeats.length === 0) {
+      setError("Vui lòng chọn ít nhất một ghế!");
+      return;
+    }
+
+    if (!showId) {
+      setError("Không tìm thấy ID suất chiếu!");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        setError("Vui lòng đăng nhập để đặt vé!");
+        return;
+      }
+
+      const bookingRequest = {
+        show_id: showId,
+        seat_index: selectedSeats.map((seat) => seat.seatIndex),
+      };
+
+      const bookingResponse = await axios.post(
+        `https://localhost:8443/api/booking/create`,
+        bookingRequest,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Tính tổng tiền
+      const totalPrice = selectedSeats.reduce((sum, seat) => sum + seatTypePrice[seat.type], 0);
+
+      // Chuyển hướng đến PaymentPage với bookingId, totalPrice, và seatCount
+      navigate(`/payment/${bookingResponse.data.id}/${totalPrice}/${selectedSeats.length}`);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setError("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
+        localStorage.removeItem("accessToken");
+      } else {
+        setError(error.response?.data?.message || "Đặt vé thất bại. Vui lòng thử lại!");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const totalPrice = selectedSeats.reduce((sum, seat) => sum + seatTypePrice[seat.type], 0);
@@ -81,15 +141,12 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
       <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg w-[850px] max-w-full max-h-[80vh] overflow-y-auto relative mt-16 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-        {/* Nút thoát ❌ */}
         <button
           className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-white transition z-10"
           onClick={onClose}
         >
           ×
         </button>
-
-        {/* Giờ chiếu ở góc trên bên trái */}
         {show && (
           <div className="absolute top-4 left-4 text-sm text-gray-300">
             Giờ chiếu: {new Date(show.startTime).toLocaleTimeString("vi-VN", {
@@ -98,24 +155,17 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
             })}
           </div>
         )}
-
-        {/* Timer ở góc trên bên phải */}
         <div className="absolute top-4 right-16 text-sm text-red-400 font-semibold">
           Thời gian chọn ghế: {String(Math.floor(timer / 60)).padStart(2, "0")}:{String(timer % 60).padStart(2, "0")}
         </div>
-
-        {/* Tiêu đề và màn hình chiếu */}
         <div className="text-center mb-6">
           <h2 className="text-lg font-bold mb-4">
             {show?.hallName ? `Phòng chiếu ${show.hallName}` : "Phòng chiếu"}
           </h2>
-          {/* Màn hình chiếu */}
           <div className="w-full h-8 bg-gradient-to-b from-orange-400 to-orange-600 rounded-t-lg shadow-lg mb-4"></div>
         </div>
-
         {loading && <p className="text-center text-blue-400 text-sm">Đang tải ghế...</p>}
         {error && <p className="text-center text-red-400 text-sm">{error}</p>}
-
         {!loading && !error && (
           <div className="flex flex-col items-center gap-2">
             {Object.keys(groupedSeats).map((row) => (
@@ -124,8 +174,7 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
                   <button
                     key={seat.seatId}
                     className={`p-1 w-8 h-8 text-xs font-bold rounded transition-all text-center 
-                      ${seat.status === "BOOKED" ? "bg-gray-500 text-gray-800 cursor-not-allowed" : "cursor-pointer"}
-                      ${selectedSeats.includes(seat) ? "bg-blue-500 text-white" : seat.type === "VIP" ? "bg-orange-500 hover:bg-orange-400" : "bg-gray-300 text-black hover:bg-gray-200"}`}
+                      ${seat.status === "BOOKED" ? "bg-gray-600 text-white cursor-not-allowed" : selectedSeats.includes(seat) ? "bg-blue-500 text-white cursor-pointer" : seat.type === "VIP" ? "bg-orange-500 hover:bg-orange-400 cursor-pointer" : "bg-gray-300 text-black hover:bg-gray-200 cursor-pointer"}`}
                     disabled={seat.status === "BOOKED"}
                     onClick={() => toggleSeatSelection(seat)}
                   >
@@ -136,8 +185,6 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
             ))}
           </div>
         )}
-
-        {/* Chú thích xếp hàng ngang */}
         <div className="mt-3 px-4 py-2 bg-gray-800 rounded flex justify-around text-center text-sm">
           <p className="text-orange-400">
             <span className="inline-block w-4 h-4 mr-1 bg-orange-500 rounded"></span>
@@ -152,26 +199,23 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
             Đã chọn
           </p>
           <p className="text-gray-400">
-            <span className="inline-block w-4 h-4 mr-1 bg-gray-500 rounded"></span>
+            <span className="inline-block w-4 h-4 mr-1 bg-gray-600 rounded"></span>
             Đã đặt
           </p>
         </div>
-
-        {/* Hiển thị seatIndex của ghế đã chọn */}
         <p className="text-center text-yellow-400 mt-2 text-lg">
           Ghế đã chọn: {selectedSeats.length > 0 ? selectedSeats.map(seat => seat.seatIndex).join(", ") : "Chưa chọn ghế"} - Tổng tiền: {totalPrice.toLocaleString()} VNĐ
         </p>
-
         <div className="flex justify-between mt-4">
           <button className="px-4 py-2 border rounded bg-gray-700 hover:bg-gray-600 text-sm" onClick={onClose}>
             Quay lại
           </button>
           <button
             className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 disabled:bg-gray-500 text-sm"
-            onClick={onClose}
-            disabled={selectedSeats.length === 0}
+            onClick={handleCreateBooking}
+            disabled={selectedSeats.length === 0 || loading}
           >
-            Thanh toán
+            {loading ? "Đang xử lý..." : "Đặt ghế"}
           </button>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import SeatSelectionModal from "../components/seatSelectionModal";
-import Footer from "../components/Footer";
+import Footer from "../components/footer";
 import LoginModal from "../components/loginModal";
 
 // Hàm giới hạn số từ và thêm dấu "..." nếu vượt quá
@@ -30,7 +30,7 @@ const MovieDetailPage = ({ isLoggedIn, setIsLoggedIn }) => {
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/film/getFilm/${id}`);
+        const response = await axios.get(`https://localhost:8443/api/film/getFilm/${id}`);
         console.log("Phản hồi API phim:", response.data);
         setMovie({
           ...response.data,
@@ -45,7 +45,7 @@ const MovieDetailPage = ({ isLoggedIn, setIsLoggedIn }) => {
 
     const fetchShowtimes = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/show/getByFilm?filmId=${id}`);
+        const response = await axios.get(`https://localhost:8443/api/show/getByFilm?filmId=${id}`);
         const sortedShowtimes = response.data.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
         setShowtimes(sortedShowtimes);
 
@@ -84,7 +84,7 @@ const MovieDetailPage = ({ isLoggedIn, setIsLoggedIn }) => {
   const handleLoginSuccess = () => {
     console.log("🎉 Đăng nhập thành công, kiểm tra mở SeatModal");
     setIsLoginModalOpen(false);
-    setIsLoggedIn(true); // Cập nhật trạng thái isLoggedIn trong App.jsx
+    setIsLoggedIn(true);
     if (selectedShow) {
       console.log("✅ Có selectedShow, mở SeatSelectionModal");
       setIsSeatModalOpen(true);
@@ -107,7 +107,7 @@ const MovieDetailPage = ({ isLoggedIn, setIsLoggedIn }) => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|shorts\/))([^#&?]*)/);
     return match ? match[1] : null;
   };
-  const BASE_URL = "http://localhost:8080/largeImages";
+  const BASE_URL = "https://localhost:8443/largeImages";
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "/placeholder.jpg";
     if (imagePath.startsWith("http")) return imagePath;
@@ -133,7 +133,7 @@ const MovieDetailPage = ({ isLoggedIn, setIsLoggedIn }) => {
             <img
               src={
                 movie.image
-                  ? `http://localhost:8080/filmImages/${movie.image}`
+                  ? `https://localhost:8443/filmImages/${movie.image}`
                   : "/placeholder.jpg"
               }
               alt={movie.title}
@@ -265,6 +265,7 @@ const MovieDetailPage = ({ isLoggedIn, setIsLoggedIn }) => {
           isOpen={isSeatModalOpen}
           onClose={closeSeatModal}
           movie={movie}
+          show={selectedShow} // Truyền selectedShow để hiển thị giờ chiếu
         />
       )}
       <LoginModal

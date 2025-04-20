@@ -113,7 +113,7 @@ const ManageFilmsPage = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/film/searchFilmsByPrefix?prefix=${encodeURIComponent(trimmedSearchTerm)}&pageNumber=0&pageSize=50`,
+        `https://localhost:8443/api/film/searchFilmsByPrefix?prefix=${encodeURIComponent(trimmedSearchTerm)}&pageNumber=0&pageSize=50`,
         {
           headers: { "Content-Type": "application/json" },
         }
@@ -184,7 +184,7 @@ const ManageFilmsPage = () => {
 
     const response = await makeAuthenticatedRequest({
       method: "POST",
-      url: "http://localhost:8080/api/film/addFilm",
+      url: "https://localhost:8443/api/film/addFilm",
       data: formData,
       headers: {
         "Content-Type": "multipart/form-data",
@@ -234,7 +234,7 @@ const ManageFilmsPage = () => {
 
     const response = await makeAuthenticatedRequest({
       method: "PUT",
-      url: `http://localhost:8080/api/film/updateFilm/${filmToEdit.id}`,
+      url: `https://localhost:8443/api/film/updateFilm/${filmToEdit.id}`,
       data: formData,
       headers: {
         "Content-Type": "multipart/form-data",
@@ -283,7 +283,7 @@ const ManageFilmsPage = () => {
 
     const response = await makeAuthenticatedRequest({
       method: "DELETE",
-      url: `http://localhost:8080/api/film/remove/${filmToDelete}`,
+      url: `https://localhost:8443/api/film/remove/${filmToDelete}`,
     });
 
     if (response) {
@@ -912,7 +912,7 @@ const ManageFilmsPage = () => {
                 <strong>Ảnh nhỏ (image):</strong>
                 {selectedFilm.image ? (
                   <img
-                    src={`http://localhost:8080/filmImages/${selectedFilm.image}`}
+                    src={`https://localhost:8443/filmImages/${selectedFilm.image}`}
                     alt={selectedFilm.title}
                     className="mt-2 w-32 h-48 object-cover rounded-lg"
                   />
@@ -924,7 +924,7 @@ const ManageFilmsPage = () => {
                 <strong>Ảnh lớn (largeImage):</strong>
                 {selectedFilm.largeImage ? (
                   <img
-                    src={`http://localhost:8080/largeImages/${selectedFilm.largeImage}`}
+                    src={`https://localhost:8443/largeImages/${selectedFilm.largeImage}`}
                     alt={selectedFilm.title}
                     className="mt-2 w-48 h-32 object-cover rounded-lg"
                   />
