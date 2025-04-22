@@ -142,36 +142,40 @@ public class FilmServiceImplement implements FilmService {
         // Cập nhật các trường của film từ dữ liệu đầu vào
         existingFilm.setTitle(film.getTitle());
         existingFilm.setDescription(film.getDescription());
+        existingFilm.setDurationInMins(film.getDurationInMins());
+        existingFilm.setLanguage(film.getLanguage());
         existingFilm.setReleaseDate(film.getReleaseDate());
+        existingFilm.setCountry(film.getCountry());
         existingFilm.setCategories(film.getCategories());
-        // Cập nhật các trường khác nếu cần
+        existingFilm.setActors(film.getActors());
+        existingFilm.setTrailer(film.getTrailer());
 
         // Xử lý ảnh nhỏ
         if (image != null && !image.isEmpty()) {
-            // Nếu có ảnh cũ, xóa trước khi lưu ảnh mới
             String oldImagePath = existingFilm.getImage();
             if (oldImagePath != null && !oldImagePath.isEmpty()) {
                 deleteImage(oldImagePath, IMAGE_UPLOAD_DIR);
             }
-            // Lưu ảnh mới
             String newImagePath = saveImage(image, film.getTitle(), IMAGE_UPLOAD_DIR);
             existingFilm.setImage(newImagePath);
-        } // Nếu không có ảnh mới, giữ nguyên ảnh cũ
+        }
 
         // Xử lý ảnh lớn
         if (largeImage != null && !largeImage.isEmpty()) {
-            // Nếu có ảnh cũ, xóa trước khi lưu ảnh mới
             String oldLargeImagePath = existingFilm.getLargeImage();
             if (oldLargeImagePath != null && !oldLargeImagePath.isEmpty()) {
                 deleteImage(oldLargeImagePath, LARGE_IMAGE_UPLOAD_DIR);
             }
-            // Lưu ảnh mới
             String newLargeImagePath = saveImage(largeImage, film.getTitle(), LARGE_IMAGE_UPLOAD_DIR);
             existingFilm.setLargeImage(newLargeImagePath);
-        } // Nếu không có ảnh mới, giữ nguyên ảnh cũ
+        }
 
-        // Cập nhật trạng thái dựa trên ngày phát hành
-        existingFilm.setStatus(determineStatus(film.getReleaseDate()));
+        // Cập nhật trạng thái: Nếu client gửi status, sử dụng giá trị đó; nếu không, tính toán dựa trên releaseDate
+        if (film.getStatus() != null) {
+            existingFilm.setStatus(film.getStatus());
+        } else {
+            existingFilm.setStatus(determineStatus(film.getReleaseDate()));
+        }
 
         // Lưu phim đã cập nhật vào cơ sở dữ liệu
         return filmRepository.save(existingFilm);

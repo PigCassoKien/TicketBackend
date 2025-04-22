@@ -6,6 +6,7 @@ import com.example.besrc.ServerResponse.ErrorResponse;
 import com.example.besrc.ServerResponse.FilmInformationResponse;
 import com.example.besrc.ServerResponse.MyApiResponse;
 import com.example.besrc.Service.FilmService;
+import com.example.besrc.requestClient.FilmRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -138,28 +139,23 @@ public class FilmController {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN')")
     public ResponseEntity<Film> updateFilm(
             @PathVariable(name = "filmId") @Valid Long filmId,
-            @RequestPart("title") String title,
-            @RequestPart("description") String description,
-            @RequestPart("durationInMins") String durationInMins,
-            @RequestPart("language") String language,
-            @RequestPart("releaseDate") String releaseDate,
-            @RequestPart("country") String country,
-            @RequestPart("categories") String categories,
-            @RequestPart(value = "image", required = false) MultipartFile image,
-            @RequestPart(value = "largeImage", required = false) MultipartFile largeImage,
-            @RequestPart("trailer") String trailer,
-            @RequestPart("actors") String actors) throws Exception {
+            @ModelAttribute @Valid FilmRequest filmRequest) throws Exception {
         Film film = new Film();
         film.setId(filmId);
-        film.setTitle(title);
-        film.setDescription(description);
-        film.setDurationInMins(Integer.parseInt(durationInMins));
-        film.setLanguage(language);
-        film.setReleaseDate(LocalDate.parse(releaseDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        film.setCountry(country);
-        film.setCategories(List.of(categories.split(",")));
-        film.setTrailer(trailer);
-        film.setActors(List.of(actors.split(",")));
+        film.setTitle(filmRequest.getTitle());
+        film.setDescription(filmRequest.getDescription());
+        film.setDurationInMins(filmRequest.getDurationInMinutes());
+        film.setLanguage(filmRequest.getLanguage());
+        film.setReleaseDate(LocalDate.parse(filmRequest.getReleaseDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        film.setCountry(filmRequest.getCountry());
+        film.setCategories(filmRequest.getCategories());
+        film.setTrailer(filmRequest.getTrailer());
+        film.setActors(filmRequest.getActors());
+        film.setStatus(filmRequest.getStatus());
+
+        // Xử lý image và largeImage
+        MultipartFile image = filmRequest.getImage();
+        MultipartFile largeImage = filmRequest.getLargeImage();
 
         Film updatedFilm = filmService.updateFilm(film, image, largeImage);
         return new ResponseEntity<>(updatedFilm, HttpStatus.OK);

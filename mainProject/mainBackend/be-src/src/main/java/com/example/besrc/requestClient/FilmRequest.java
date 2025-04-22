@@ -1,6 +1,7 @@
 // FilmRequest.java
 package com.example.besrc.requestClient;
 
+import com.example.besrc.Entities.EnumEntities.FilmStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,8 +20,8 @@ public class FilmRequest {
     @JsonProperty("description")
     private String description;
 
-    @JsonProperty("durationInMins")
-    private int durationInMins;
+    @JsonProperty("durationInMinutes")
+    private int durationInMinutes;
 
     @JsonProperty("language")
     private String language;
@@ -43,5 +44,8 @@ public class FilmRequest {
 
     @JsonProperty("actors")
     private List<String> actors;
+
+    @JsonProperty("status")
+    private FilmStatus status;
 
 }

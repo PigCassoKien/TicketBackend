@@ -85,7 +85,7 @@ public class Film {
     public Film(FilmRequest req) {
         this.title = req.getTitle();
         this.description = req.getDescription();
-        this.durationInMins = req.getDurationInMins();
+        this.durationInMins = req.getDurationInMinutes();
         this.language = req.getLanguage();
         // Parse the releaseDate from String to LocalDate
         this.releaseDate = LocalDate.parse(req.getReleaseDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
