@@ -23,4 +23,14 @@ public interface PaymentService {
     public void addPaymentMail(Payment payment);
 
     Map<String, String> handleVNPayReturn(HttpServletRequest request);
+
+    public double getTotalPaidByAccount(String username);
+
+    public double getTotalPaidByDay(String date);
+
+    public double getTotalPaidByMonth(String yearMonth);
+
+    public double getTotalPaidByShow (String showId);
+
+    MyApiResponse getMyTotalPaid();
 }

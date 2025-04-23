@@ -34,11 +34,11 @@ public class Payment {
 
     @CreationTimestamp
     @Column(name = "create_at", nullable = false, updatable = false)
-    private Date create_at;
+    private Date createAt;
 
     @UpdateTimestamp
     @Column(name = "update_at", nullable = true, updatable = true)
-    private Date update_at;
+    private Date updateAt;
 
     public Payment() {}
 

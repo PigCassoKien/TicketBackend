@@ -1,5 +1,6 @@
 package com.example.besrc.ServicesImplement;
 
+import com.example.besrc.Entities.Account;
 import com.example.besrc.Entities.Booking;
 import com.example.besrc.Entities.EnumEntities.BookingStatus;
 import com.example.besrc.Entities.EnumEntities.ESeatStatus;
@@ -8,10 +9,7 @@ import com.example.besrc.Entities.Payment;
 import com.example.besrc.Entities.ShowSeat;
 import com.example.besrc.Exception.BadRequestException;
 import com.example.besrc.Exception.NotFoundException;
-import com.example.besrc.Repository.AccountRepository;
-import com.example.besrc.Repository.BookingRepository;
-import com.example.besrc.Repository.PaymentRepository;
-import com.example.besrc.Repository.ShowSeatRepository;
+import com.example.besrc.Repository.*;
 import com.example.besrc.ServerResponse.MyApiResponse;
 import com.example.besrc.ServerResponse.PaymentResponse;
 import com.example.besrc.Service.EmailService;
@@ -21,11 +19,18 @@ import com.example.besrc.requestClient.PaymentRequest;
 import com.example.besrc.utils.VNPay;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -49,6 +54,9 @@ public class PaymentServiceImplement implements PaymentService {
 
     @Autowired
     private ShowSeatRepository showSeatRepository;
+
+    @Autowired
+    private CinemaShowRepository cinemaShowRepository;
     @Override
     public PaymentResponse create(String username, PaymentRequest request, String ip_addr) {
         Booking booking = bookingRepository.findById(request.getBookingId()).orElseThrow(()
@@ -273,5 +281,116 @@ public class PaymentServiceImplement implements PaymentService {
 
         System.out.println("IPN Response: " + response);
         return response;
+    }
+
+    @Override
+    public double getTotalPaidByAccount(String username) {
+        Account account = accountRepository.getByUsername(username)
+                .orElseThrow(() -> new NotFoundException("Username " + username +"not found"));
+
+        List<Booking> bookings = bookingRepository.findAllByAccountId(account.getId());
+        List<String> bookingIds = bookings.stream()
+                .map(Booking::getId)
+                .toList();
+
+        List<Payment> payments = paymentRepository.findAllByBookingIdIn(bookingIds);
+        return payments.stream()
+                .filter(payment -> payment.getStatus().equals(PaymentStatus.APPROVED))
+                .mapToDouble(Payment::getAmount)
+                .sum();
+    }
+
+    @Override
+    public double getTotalPaidByDay(String date) {
+        LocalDate localDate;
+        try {
+            localDate = LocalDate.parse(date);
+
+        } catch (Exception e) {
+            throw new BadRequestException("Invalid date format");
+        }
+
+        LocalDateTime startOfDay = localDate.atStartOfDay();
+        LocalDateTime endOfDay = localDate.atTime(23, 59, 59);
+
+        Date startDate = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant());
+        Date endDate = Date.from(endOfDay.atZone(ZoneId.systemDefault()).toInstant());
+
+        List<Payment> payments = paymentRepository.findAllByCreateAtBetween(startDate, endDate);
+        return payments.stream()
+                .filter(payment -> payment.getStatus().equals(PaymentStatus.APPROVED))
+                .mapToDouble(Payment::getAmount)
+                .sum();
+    }
+
+    @Override
+    public double getTotalPaidByMonth(String yearMonth) {
+        YearMonth yearMonth1;
+        try {
+            yearMonth1 = YearMonth.parse(yearMonth);
+        } catch (Exception e) {
+            throw new BadRequestException("Invalid month format");
+        }
+
+        LocalDateTime startOfMonth = yearMonth1.atDay(1).atStartOfDay();
+        LocalDateTime endOfMonth = yearMonth1.atEndOfMonth().atTime(23, 59, 59);
+
+        Date startDate = Date.from(startOfMonth.atZone(ZoneId.systemDefault()).toInstant());
+        Date endDate = Date.from(endOfMonth.atZone(ZoneId.systemDefault()).toInstant());
+
+        List<Payment> payments = paymentRepository.findAllByCreateAtBetween(startDate, endDate);
+        return payments.stream()
+                .filter(payment -> payment.getStatus().equals(PaymentStatus.APPROVED))
+                .mapToDouble(Payment::getAmount)
+                .sum();
+    }
+
+    @Override
+    public double getTotalPaidByShow(String showId) {
+        if (cinemaShowRepository.existsById(showId)) {
+            throw new NotFoundException("Show ID " + showId + " not found");
+        }
+
+        List<Booking> bookings = bookingRepository.findAllByShowId(showId);
+        List<String> bookingIds = bookings.stream()
+                .map(Booking::getId)
+                .toList();
+
+        List<Payment> payments = paymentRepository.findAllByBookingIdIn(bookingIds);
+        return payments.stream()
+                .filter(payment -> payment.getStatus().equals(PaymentStatus.APPROVED))
+                .mapToDouble(Payment::getAmount)
+                .sum();
+    }
+
+    @Override
+    public MyApiResponse getMyTotalPaid() {
+
+        String username;
+        try {
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (principal instanceof UserDetails) {
+                username = ((UserDetails) principal).getUsername();
+            } else {
+                username = principal.toString();
+            }
+        } catch (Exception e) {
+            throw new BadRequestException("user is not authenticated");
+        }
+
+        Account account = accountRepository.getByUsername(username)
+                .orElseThrow(() -> new NotFoundException("Username " + username +"not found"));
+
+        List<Booking> bookings = bookingRepository.findAllByAccountId(account.getId());
+        List<String> bookingIds = bookings.stream()
+                .map(Booking::getId)
+                .toList();
+
+        List<Payment> payments = paymentRepository.findAllByBookingIdIn(bookingIds);
+        double amount = payments.stream()
+                .filter(payment -> payment.getStatus().equals(PaymentStatus.APPROVED))
+                .mapToDouble(Payment::getAmount)
+                .sum();
+        return new MyApiResponse("OK", HttpStatus.OK.value(), "Total paid: " + amount);
     }
 }

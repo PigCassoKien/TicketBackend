@@ -1,6 +1,58 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion"; // Import Framer Motion
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import Footer from "../components/footer";
+
+// Hiệu ứng nâng cao
+const sectionVariants = {
+  hidden: { opacity: 0, y: 60, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.8, ease: [0.6, -0.05, 0.01, 0.99] },
+  },
+};
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
+
+const childVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.9 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5 } },
+  hover: {
+    scale: 1.05,
+    y: -10,
+    boxShadow: "0px 10px 20px rgba(255, 0, 0, 0.2)",
+    transition: { type: "spring", stiffness: 300, damping: 15 },
+  },
+};
+
+const buttonVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.4 } },
+  hover: {
+    scale: 1.1,
+    backgroundColor: "#b91c1c",
+    transition: { type: "spring", stiffness: 400, damping: 10 },
+  },
+  tap: { scale: 0.95 },
+};
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.7 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+  exit: { opacity: 0, scale: 0.7, transition: { duration: 0.3 } },
+};
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState({
@@ -10,20 +62,56 @@ const ProfilePage = () => {
     username: "",
     email: "",
   });
-
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("account");
+  const [headerVisible, setHeaderVisible] = useState(false);
+  const [contentVisible, setContentVisible] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
+
+  // Scroll-based parallax effect
+  const { scrollY } = useScroll();
+  const backgroundOpacity = useTransform(scrollY, [0, 500], [0.3, 0.7]);
+  const cardScale = useTransform(scrollY, [0, 200], [1, 1.05]);
+
+  const navbarHeight = 80;
+
+  useEffect(() => {
+    if (showModal) {
+      setScrollPosition(window.scrollY);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+      window.scrollTo(0, scrollPosition);
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [showModal, scrollPosition]);
+
+  useEffect(() => {
+    if (showModal) {
+      const scrollY = window.scrollY || window.pageYOffset;
+      const viewportHeight = window.innerHeight + 50;
+      const viewportWidth = window.innerWidth;
+      const modalTop = scrollY + viewportHeight / 2 + navbarHeight - 100;
+      const modalLeft = viewportWidth / 2;
+      setModalPosition({ top: modalTop, left: modalLeft });
+    }
+  }, [showModal]);
 
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError("Bạn chưa đăng nhập!");
+        setError("Bạn chưa đăng nhập! Vui lòng đăng nhập lại.");
         setLoading(false);
         return;
       }
@@ -42,8 +130,6 @@ const ProfilePage = () => {
         }
 
         const data = await response.json();
-        console.log("📢 Dữ liệu API trả về:", data);
-
         setUserData({
           fullName: data.fullname || "Chưa cập nhật",
           phoneNumber: data.phoneNumber || "Chưa cập nhật",
@@ -53,24 +139,30 @@ const ProfilePage = () => {
         });
       } catch (error) {
         setError(error.message);
+        alert(error.message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserData();
-  }, []);
 
-  useEffect(() => {
-    console.log("✅ State userData sau khi cập nhật:", userData);
-  }, [userData]);
+    const headerTimer = setTimeout(() => setHeaderVisible(true), 200);
+    const contentTimer = setTimeout(() => setContentVisible(true), 400);
+
+    return () => {
+      clearTimeout(headerTimer);
+      clearTimeout(contentTimer);
+    };
+  }, []);
 
   useEffect(() => {
     if (activeTab === "history") {
       const fetchBookingHistory = async () => {
         const token = localStorage.getItem("accessToken");
         if (!token) {
-          setError("Bạn chưa đăng nhập!");
+          setError("Bạn chưa đăng nhập! Vui lòng đăng nhập lại.");
+          alert("Bạn chưa đăng nhập! Vui lòng đăng nhập lại.");
           return;
         }
 
@@ -89,12 +181,11 @@ const ProfilePage = () => {
           }
 
           const data = await response.json();
-          console.log("📢 Lịch sử đặt vé:", data);
-
           const bookedTickets = data.filter((booking) => booking.status === "BOOKED");
           setBookings(bookedTickets);
         } catch (error) {
           setError(error.message);
+          alert(error.message);
         } finally {
           setLoading(false);
         }
@@ -113,7 +204,7 @@ const ProfilePage = () => {
     setSaving(true);
     try {
       const token = localStorage.getItem("accessToken");
-      if (!token) throw new Error("Bạn chưa đăng nhập!");
+      if (!token) throw new Error("Bạn chưa đăng nhập! Vui lòng đăng nhập lại.");
 
       const response = await fetch("https://localhost:8443/api/account/update-profile", {
         method: "PUT",
@@ -138,6 +229,7 @@ const ProfilePage = () => {
       alert("Cập nhật thành công!");
     } catch (error) {
       setError(error.message);
+      alert(error.message);
     } finally {
       setSaving(false);
     }
@@ -146,12 +238,13 @@ const ProfilePage = () => {
   const fetchBookingDetails = async (bookingId) => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      setError("Bạn chưa đăng nhập!");
+      setModalError("Bạn chưa đăng nhập! Vui lòng đăng nhập lại.");
       return;
     }
 
     try {
-      setLoading(true);
+      setModalLoading(true);
+      setModalError("");
       const response = await fetch(`https://localhost:8443/api/booking/${bookingId}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
@@ -165,42 +258,31 @@ const ProfilePage = () => {
       }
 
       const data = await response.json();
-      console.log("📢 Booking details:", data);
       setSelectedBooking(data);
     } catch (error) {
-      setError(error.message);
-      console.error("Error fetching booking details:", error);
+      setModalError(error.message);
     } finally {
-      setLoading(false);
+      setModalLoading(false);
     }
   };
 
   const parseCreateAtDate = (createAt) => {
     try {
-      console.log(`Raw createAt value: ${createAt}`);
       const isoDateString = createAt.replace(" ", "T") + "+07:00";
       const parsedDate = new Date(isoDateString);
-
       if (isNaN(parsedDate.getTime())) {
-        console.error(`Invalid date parsed from createAt: ${createAt}`);
         return new Date().toLocaleString("vi-VN", {
           timeZone: "Asia/Ho_Chi_Minh",
           dateStyle: "short",
           timeStyle: "short",
         });
       }
-
-      console.log(`Parsed createAt date: ${parsedDate.toISOString()}`);
-      const formattedDate = parsedDate.toLocaleString("vi-VN", {
+      return parsedDate.toLocaleString("vi-VN", {
         timeZone: "Asia/Ho_Chi_Minh",
         dateStyle: "short",
         timeStyle: "short",
       });
-      console.log(`Formatted date for display: ${formattedDate}`);
-
-      return formattedDate;
     } catch (error) {
-      console.error(`Error parsing createAt date: ${createAt}`, error);
       return new Date().toLocaleString("vi-VN", {
         timeZone: "Asia/Ho_Chi_Minh",
         dateStyle: "short",
@@ -209,35 +291,75 @@ const ProfilePage = () => {
     }
   };
 
-  if (loading) return <p className="text-center text-white mt-10">Đang tải dữ liệu...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+          className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 text-white pt-20">
-      <main className="flex-grow max-w-3xl mx-auto mt-8 p-6 bg-gray-800 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-center mb-6">Thông tin cá nhân</h2>
+    <motion.div
+      className="flex flex-col min-h-screen bg-gray-900 text-white pt-20"
+      style={{ background: `radial-gradient(circle, rgba(20, 20, 20, ${backgroundOpacity.get()}), rgba(14, 14, 16, 1))` }}
+    >
+      <motion.main
+        className="flex-grow max-w-3xl mx-auto mt-8 p-6 bg-gray-800 rounded-lg shadow-lg"
+        style={{ scale: cardScale }}
+        initial="hidden"
+        animate={contentVisible ? "visible" : "hidden"}
+        variants={sectionVariants}
+      >
+        <motion.h2
+          className="text-2xl font-bold text-center mb-6"
+          initial="hidden"
+          animate={headerVisible ? "visible" : "hidden"}
+          variants={childVariants}
+        >
+          Thông tin cá nhân
+        </motion.h2>
 
-        <div className="flex justify-center mb-6 space-x-4">
+        <motion.div
+          className="flex justify-center mb-6 space-x-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <motion.button
             className={`px-4 py-2 rounded ${activeTab === "account" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300"}`}
             onClick={() => setActiveTab("account")}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
           >
             Tài khoản của tôi
           </motion.button>
           <motion.button
             className={`px-4 py-2 rounded ${activeTab === "history" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300"}`}
             onClick={() => setActiveTab("history")}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
           >
             Lịch sử mua vé
           </motion.button>
-        </div>
+        </motion.div>
 
-        {error && <p className="text-red-500 text-center">{error}</p>}
+        {error && (
+          <motion.p
+            className="text-red-500 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            {error}
+          </motion.p>
+        )}
 
         <AnimatePresence mode="wait">
           {activeTab === "account" && (
@@ -247,65 +369,40 @@ const ProfilePage = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
+              variants={containerVariants}
             >
               <div>
-                <div className="mt-4">
-                  <label className="block text-gray-300">Họ và Tên *</label>
-                  <input
-                    name="fullName"
-                    value={userData.fullName}
-                    onChange={handleChange}
-                    className="w-full p-2 rounded bg-gray-700 text-white"
-                  />
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-gray-300">Số điện thoại *</label>
-                  <input
-                    name="phoneNumber"
-                    value={userData.phoneNumber}
-                    onChange={handleChange}
-                    className="w-full p-2 rounded bg-gray-700 text-white"
-                  />
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-gray-300">Địa chỉ</label>
-                  <input
-                    name="address"
-                    value={userData.address}
-                    onChange={handleChange}
-                    className="w-full p-2 rounded bg-gray-700 text-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className="block text-gray-300">Tên đăng nhập</label>
+                {[
+                  { label: "Họ và Tên *", name: "fullName", disabled: false },
+                  { label: "Số điện thoại *", name: "phoneNumber", disabled: false },
+                  { label: "Địa chỉ", name: "address", disabled: false },
+                  { label: "Tên đăng nhập", name: "username", disabled: true },
+                  { label: "Email", name: "email", disabled: true },
+                ].map((field, index) => (
+                  <motion.div key={field.name} className="mt-4" variants={childVariants}>
+                    <label className="block text-gray-300">{field.label}</label>
                     <input
-                      name="username"
-                      value={userData.username}
-                      className="w-full p-2 rounded bg-gray-600 text-gray-400 cursor-not-allowed"
-                      disabled
+                      name={field.name}
+                      value={userData[field.name]}
+                      onChange={handleChange}
+                      className={`w-full p-2 rounded ${
+                        field.disabled ? "bg-gray-600 text-gray-400 cursor-not-allowed" : "bg-gray-700 text-white"
+                      }`}
+                      disabled={field.disabled}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-gray-300">Email</label>
-                    <input
-                      name="email"
-                      value={userData.email}
-                      className="w-full p-2 rounded bg-gray-600 text-gray-400 cursor-not-allowed"
-                      disabled
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-6 flex justify-between">
+                  </motion.div>
+                ))}
+                <motion.div
+                  className="mt-6 flex justify-between"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
                   <motion.button
                     className="px-4 py-2 bg-gray-600 rounded hover:bg-gray-700"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                   >
                     Đổi mật khẩu
                   </motion.button>
@@ -313,17 +410,16 @@ const ProfilePage = () => {
                     onClick={handleSave}
                     disabled={saving}
                     className="px-4 py-2 bg-red-600 rounded hover:bg-red-700"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                   >
                     {saving ? "Đang lưu..." : "Lưu thông tin"}
                   </motion.button>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           )}
-
           {activeTab === "history" && (
             <motion.div
               key="history"
@@ -332,25 +428,41 @@ const ProfilePage = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div>
-                <h3 className="text-xl font-semibold text-center mb-4">Lịch sử mua vé</h3>
-                {bookings.length === 0 ? (
-                  <p className="text-gray-300 text-center">Bạn chưa có vé nào được xác nhận.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {bookings.map((booking) => (
+              <h3 className="text-xl font-semibold text-center mb-4">Lịch sử mua vé</h3>
+              {bookings.length === 0 ? (
+                <motion.p
+                  className="text-gray-300 text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  Bạn chưa có vé nào được xác nhận.
+                </motion.p>
+              ) : (
+                <motion.div
+                  className="space-y-4"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {bookings.map((booking) => (
+                    <motion.div
+                      key={booking.id}
+                      className="p-4 bg-gray-700 rounded-lg shadow cursor-pointer hover:bg-gray-600 relative overflow-hidden"
+                      onClick={() => {
+                        setShowModal(true);
+                        fetchBookingDetails(booking.id);
+                      }}
+                      variants={cardVariants}
+                      whileHover="hover"
+                    >
                       <motion.div
-                        key={booking.id}
-                        className="p-4 bg-gray-700 rounded-lg shadow cursor-pointer hover:bg-gray-600"
-                        onClick={() => {
-                          fetchBookingDetails(booking.id);
-                          setShowModal(true);
-                        }}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
+                        className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"
+                        initial={{ opacity: 0 }}
+                        whileHover={{ opacity: 1 }}
                         transition={{ duration: 0.3 }}
-                      >
+                      />
+                      <div className="relative z-10">
                         <div className="flex justify-between">
                           <h4 className="text-lg font-semibold">{booking.filmName}</h4>
                           <span
@@ -372,61 +484,138 @@ const ProfilePage = () => {
                         <p className="text-gray-400 text-sm">
                           Ngày đặt: {parseCreateAtDate(booking.createAt)}
                         </p>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
+      </motion.main>
 
       <AnimatePresence>
-        {showModal && selectedBooking && (
+        {showModal && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-black bg-opacity-70 z-50"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={modalVariants}
           >
             <motion.div
-              className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md"
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md max-h-[80vh] overflow-y-auto"
+              style={{
+                position: "absolute",
+                top: `${modalPosition.top}px`,
+                left: `${modalPosition.left}px`,
+                transform: "translate(-50%, -50%)",
+              }}
+              variants={modalVariants}
             >
-              <h3 className="text-xl font-semibold mb-4">{selectedBooking.filmName}</h3>
-              <p><strong>Phòng chiếu:</strong> {selectedBooking.hallName}</p>
-              <p>
-                <strong>Thời gian chiếu:</strong>{" "}
-                {new Date(selectedBooking.startingTime).toLocaleString("vi-VN", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}
-              </p>
-              <p><strong>Ghế:</strong> {selectedBooking.seats.join(", ")}</p>
-              <p><strong>Tổng tiền:</strong> {selectedBooking.price.toLocaleString()} VNĐ</p>
-              <p><strong>Ngày đặt:</strong> {parseCreateAtDate(selectedBooking.createAt)}</p>
-              <p><strong>Trạng thái:</strong> {selectedBooking.status === "BOOKED" ? "Đã xác nhận" : "Đã hủy"}</p>
-              <motion.button
-                className="mt-4 px-4 py-2 bg-red-600 rounded hover:bg-red-700"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                onClick={() => setShowModal(false)}
-              >
-                Đóng
-              </motion.button>
+              {modalLoading ? (
+                <motion.p
+                  className="text-center text-white"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  Đang tải thông tin vé...
+                </motion.p>
+              ) : modalError ? (
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold">Lỗi</h3>
+                    <motion.button onClick={() => setShowModal(false)} variants={buttonVariants}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </motion.button>
+                  </div>
+                  <p className="text-red-500 text-center">{modalError}</p>
+                  <div className="mt-4 flex justify-end">
+                    <motion.button
+                      className="px-4 py-2 bg-red-600 rounded hover:bg-red-700 text-xs"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowModal(false)}
+                    >
+                      Đóng
+                    </motion.button>
+                  </div>
+                </div>
+              ) : selectedBooking ? (
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold">{selectedBooking.filmName}</h3>
+                    <motion.button onClick={() => setShowModal(false)} variants={buttonVariants}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </motion.button>
+                  </div>
+                  <p><strong>Phòng chiếu:</strong> {selectedBooking.hallName}</p>
+                  <p>
+                    <strong>Thời gian chiếu:</strong>{" "}
+                    {new Date(selectedBooking.startingTime).toLocaleString("vi-VN", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </p>
+                  <p><strong>Ghế:</strong> {selectedBooking.seats.join(", ")}</p>
+                  <p><strong>Tổng tiền:</strong> {selectedBooking.price.toLocaleString()} VNĐ</p>
+                  <p><strong>Ngày đặt:</strong> {parseCreateAtDate(selectedBooking.createAt)}</p>
+                  <p><strong>Trạng thái:</strong> {selectedBooking.status === "BOOKED" ? "Đã xác nhận" : "Đã hủy"}</p>
+                  <div className="mt-4 flex justify-end">
+                    <motion.button
+                      className="px-4 py-2 bg-red-600 rounded hover:bg-red-700 text-xs"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowModal(false)}
+                    >
+                      Đóng
+                    </motion.button>
+                  </div>
+                </div>
+              ) : (
+                <motion.p
+                  className="text-center text-white"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  Không có thông tin vé.
+                </motion.p>
+              )}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <Footer />
-    </div>
+    </motion.div>
   );
 };
 

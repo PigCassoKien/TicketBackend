@@ -140,7 +140,7 @@ public class VNPay extends HttpServlet {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         String vnp_CreateDate = simpleDateFormat.format(calendar.getTime());
 
-        calendar.setTime(payment.getCreate_at());
+        calendar.setTime(payment.getCreateAt());
         String vnp_ExpireDate = simpleDateFormat.format(calendar.getTime());
         String vnp_IpAddress = "127.0.0.1";
 

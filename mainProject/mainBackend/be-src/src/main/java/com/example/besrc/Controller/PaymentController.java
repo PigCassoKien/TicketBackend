@@ -103,4 +103,61 @@ public class PaymentController {
     public ResponseEntity<?> handleVNPayReturn(HttpServletRequest request) {
         return ResponseEntity.ok().body(paymentService.handleVNPayReturn(request));
     }
+
+    @GetMapping("/total/account/{username}")
+    @Operation(summary = "Get Total Paid By Account", responses = {
+        @ApiResponse(responseCode = "200",description = "Get Total Paid By Account Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyApiResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN')")
+    public ResponseEntity<Double> getTotalPaidByAccount(@PathVariable String username) {
+        return ResponseEntity.ok().body(paymentService.getTotalPaidByAccount(username));
+    }
+
+    @GetMapping("/total/day/{date}")
+    @Operation(summary = "Get Total Paid By Day", responses = {
+            @ApiResponse(responseCode = "200",description = "Get Total Paid By Day Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyApiResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN')")
+    public ResponseEntity<Double> getTotalPaidByDay(@PathVariable String date) {
+        return ResponseEntity.ok().body(paymentService.getTotalPaidByDay(date));
+    }
+
+    @GetMapping("/total/month/{yearMonth}")
+    @Operation(summary = "Get Total Paid By Month", responses = {
+            @ApiResponse(responseCode = "200",description = "Get Total Paid By Month Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyApiResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN')")
+    public ResponseEntity<Double> getTotalPaidByMonth(@PathVariable String yearMonth) {
+        return ResponseEntity.ok().body(paymentService.getTotalPaidByMonth(yearMonth));
+    }
+
+    @GetMapping("/total/show/{showId}")
+    @Operation(summary = "Get Total Paid By Show", responses = {
+            @ApiResponse(responseCode = "200",description = "Get Total Paid By Show Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyApiResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN')")
+    public ResponseEntity<Double> getTotalPaidByShow(@PathVariable String showId) {
+        return ResponseEntity.ok().body(paymentService.getTotalPaidByShow(showId));
+    }
+
+    @GetMapping("/my/total")
+    @Operation(summary = "Get My Total Paid", responses = {
+            @ApiResponse(responseCode = "200",description = "Get My Total Paid Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyApiResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    public ResponseEntity<MyApiResponse> getMyTotalPaid() {
+        return ResponseEntity.ok().body(paymentService.getMyTotalPaid());
+    }
+
 }

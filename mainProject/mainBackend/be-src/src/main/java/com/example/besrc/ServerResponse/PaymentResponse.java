@@ -19,7 +19,7 @@ public class PaymentResponse {
         this.id = payment.getPaymentId();
         this.email = payment.getBooking().getAccount().getEmail();
         this.price = payment.getAmount();
-        this.createAt = payment.getCreate_at().toString();
+        this.createAt = payment.getCreateAt().toString();
         this.status = payment.getStatus().toString();
 
         this.ticketDetail = new TicketDetail(payment.getBooking());

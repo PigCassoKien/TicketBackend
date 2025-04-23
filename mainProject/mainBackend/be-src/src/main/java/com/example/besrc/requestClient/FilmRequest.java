@@ -35,9 +35,9 @@ public class FilmRequest {
     @JsonProperty("categories")
     private List<String> categories;
 
-    private MultipartFile image; // Changed to MultipartFile
+    private MultipartFile image;
 
-    private MultipartFile largeImage; // Changed to MultipartFile
+    private MultipartFile largeImage;
 
     @JsonProperty("trailer")
     private String trailer;

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,4 +17,8 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     public List<Payment> findAllByBookingId(@Param("booking_id") String booking_id);
 
     Optional<Payment> findByPaymentId (String paymentId);
+
+    List<Payment> findAllByBookingIdIn(List<String> bookingIds);
+
+    List<Payment> findAllByCreateAtBetween(Date startDate, Date endDate);
 }

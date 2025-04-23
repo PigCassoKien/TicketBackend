@@ -22,4 +22,5 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
 
     int countByShowId(String showId);
 
+    List<Booking> findAllByShowId(String showId);
 }
