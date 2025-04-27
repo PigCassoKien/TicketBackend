@@ -31,6 +31,14 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private PaymentStatus status;
+    @Column(name = "order_id", unique = true)
+    private String orderId;
+
+    @Column(name = "order_info")
+    private String orderInfo;
+
+    @Column(name = "payment_type")
+    private String paymentType;
 
     @CreationTimestamp
     @Column(name = "create_at", nullable = false, updatable = false)
@@ -46,6 +54,13 @@ public class Payment {
         this.booking = booking;
         this.amount = amount;
         this.status = PaymentStatus.PENDING;
+    }
+
+    public Payment(Booking booking, double amount, String paymentType) {
+        this.booking = booking;
+        this.amount = amount;
+        this.status = PaymentStatus.PENDING;
+        this.paymentType = paymentType;
     }
 
     public void canclePayment() {

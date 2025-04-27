@@ -19,10 +19,9 @@ public class PaymentResponse {
         this.id = payment.getPaymentId();
         this.email = payment.getBooking().getAccount().getEmail();
         this.price = payment.getAmount();
-        this.createAt = payment.getCreateAt().toString();
+        // Kiểm tra null cho createAt
+        this.createAt = payment.getCreateAt() != null ? payment.getCreateAt().toString() : "";
         this.status = payment.getStatus().toString();
-
         this.ticketDetail = new TicketDetail(payment.getBooking());
     }
-
 }

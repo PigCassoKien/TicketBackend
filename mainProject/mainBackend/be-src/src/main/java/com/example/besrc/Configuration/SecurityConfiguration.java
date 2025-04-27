@@ -57,6 +57,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/feedback/add").permitAll()
                         .requestMatchers("/api/payment/order-complete").permitAll()
                         .requestMatchers("/api/payments/my/total").authenticated()
+                        .requestMatchers("/api/casso-webhook").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

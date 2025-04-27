@@ -18,7 +18,9 @@ import com.example.besrc.requestClient.HashRequest;
 import com.example.besrc.requestClient.PaymentRequest;
 import com.example.besrc.utils.VNPay;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,11 +34,23 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentServiceImplement implements PaymentService {
 
     private final int SEND_MAIL_SCHEDULE = 1000;
+
+    @Value("${payment.bank.id}")
+    private String BANK_ID;
+
+    @Value("${payment.account.no}")
+    private String ACCOUNT_NO;
+
+    @Value("${payment.account.name}")
+    private String ACCOUNT_NAME;
+
+    private static final String TEMPLATE = "compact2";
 
     Queue<PaymentResponse> sendEmail = new LinkedList<>();
 
@@ -57,46 +71,81 @@ public class PaymentServiceImplement implements PaymentService {
 
     @Autowired
     private CinemaShowRepository cinemaShowRepository;
+
     @Override
+    @Transactional
     public PaymentResponse create(String username, PaymentRequest request, String ip_addr) {
-        Booking booking = bookingRepository.findById(request.getBookingId()).orElseThrow(()
-                -> new BadRequestException("Booking ID: " + request.getBookingId() + " NOT FOUND"));
+        Booking booking = bookingRepository.findById(request.getBookingId())
+                .orElseThrow(() -> new BadRequestException("Booking ID: " + request.getBookingId() + " KHÔNG TÌM THẤY"));
+
         if (!booking.getStatus().equals(BookingStatus.PENDING)) {
-            throw new BadRequestException("Booking ID: " + request.getBookingId() + " have been already paid or cancelled");
+            throw new BadRequestException("Booking ID: " + request.getBookingId() + " đã được thanh toán hoặc bị hủy");
         }
+
         List<Payment> payments = paymentRepository.findAllByBookingId(request.getBookingId());
         if (!payments.isEmpty()) {
-            throw new BadRequestException("Booking ID: " + request.getBookingId() + " have been already paid or cancelled");
+            throw new BadRequestException("Booking ID: " + request.getBookingId() + " đã được thanh toán hoặc bị hủy");
         }
+
         String bookingAccount = booking.getAccount().getUsername();
         if (!username.equals(bookingAccount)) {
-            throw new NotFoundException("Username: " + username + " NOT FOUND");
+            throw new NotFoundException("Tên người dùng: " + username + " KHÔNG TÌM THẤY");
         }
+
         double price = booking.getPriceFromListSeats();
+        Payment payment = new Payment(booking, price, request.getPaymentType());
+        String orderId = UUID.randomUUID().toString();
+        String orderInfo = String.format("%s-%s-%s", orderId, bookingAccount, System.currentTimeMillis());
+        payment.setOrderId(orderId);
+        payment.setOrderInfo(orderInfo);
 
-        Payment payment = new Payment(booking, price);
-        Payment save = paymentRepository.save(payment);
+        // Lưu và flush để đảm bảo @CreationTimestamp được áp dụng
+        Payment savedPayment = paymentRepository.saveAndFlush(payment);
+        PaymentResponse response = new PaymentResponse(savedPayment);
 
-        String result = "none";
-        try {
-            result = VNPay.create(payment, request.getPaymentType(), ip_addr);
-        } catch (Exception e) {
-            payment.setStatus(PaymentStatus.CANCELLED);
+        if ("QR".equalsIgnoreCase(request.getPaymentType())) {
+            String qrUrl = generateQrUrl(orderId, price, orderInfo);
+            response.setPaymentUrl(qrUrl);
+        } else if ("VNPAY".equalsIgnoreCase(request.getPaymentType())) {
+            try {
+                String vnPayUrl = VNPay.create(payment, request.getPaymentType(), ip_addr);
+                response.setPaymentUrl(vnPayUrl);
+            } catch (Exception e) {
+                payment.setStatus(PaymentStatus.CANCELLED);
+                paymentRepository.save(payment);
+                throw new BadRequestException("Không thể tạo thanh toán VNPay: " + e.getMessage());
+            }
+        } else {
+            throw new BadRequestException("Loại thanh toán không được hỗ trợ: " + request.getPaymentType());
         }
-        save = paymentRepository.save(save);
-        PaymentResponse response = new PaymentResponse(save);
-        response.setPaymentUrl(result);
+
         return response;
     }
 
+    private String generateQrUrl(String orderId, double amount, String orderInfo) {
+        long amountInVnd = (long) amount;
+        return String.format("https://img.vietqr.io/image/%s-%s-%s.png?amount=%d&addInfo=%s&accountName=%s",
+                BANK_ID, ACCOUNT_NO, TEMPLATE, amountInVnd, orderInfo.replace(" ", "%20"), ACCOUNT_NAME);
+    }
+
     @Override
-    public PaymentResponse getFromId(String username, String payment_id) {
-        return null;
+    public PaymentResponse getFromId(String username, String paymentId) {
+        Payment payment = paymentRepository.findByPaymentId(paymentId)
+                .orElseThrow(() -> new NotFoundException("Payment ID: " + paymentId + " NOT FOUND"));
+        if (!payment.getBooking().getAccount().getUsername().equals(username)) {
+            throw new NotFoundException("Unauthorized access to payment ID: " + paymentId);
+        }
+        return new PaymentResponse(payment);
     }
 
     @Override
     public List<PaymentResponse> getAllPaymentsOfUser(String username) {
-        return List.of();
+        Account account = accountRepository.getByUsername(username)
+                .orElseThrow(() -> new NotFoundException("Username: " + username + " not found"));
+        List<Booking> bookings = bookingRepository.findAllByAccountId(account.getId());
+        List<String> bookingIds = bookings.stream().map(Booking::getId).collect(Collectors.toList());
+        List<Payment> payments = paymentRepository.findAllByBookingIdIn(bookingIds);
+        return payments.stream().map(PaymentResponse::new).collect(Collectors.toList());
     }
 
     @Override
@@ -105,8 +154,13 @@ public class PaymentServiceImplement implements PaymentService {
     }
 
     @Override
-    public MyApiResponse verifyPayment(String username, String payment_id) {
-        return null;
+    public MyApiResponse verifyPayment(String username, String paymentId) {
+        Payment payment = paymentRepository.findByPaymentId(paymentId)
+                .orElseThrow(() -> new NotFoundException("Payment ID: " + paymentId + " NOT FOUND"));
+        if (!payment.getBooking().getAccount().getUsername().equals(username)) {
+            throw new NotFoundException("Unauthorized access to payment ID: " + paymentId);
+        }
+        return new MyApiResponse("OK", HttpStatus.OK.value(), "Payment status: " + payment.getStatus());
     }
 
     @Override
@@ -281,6 +335,45 @@ public class PaymentServiceImplement implements PaymentService {
 
         System.out.println("IPN Response: " + response);
         return response;
+    }
+
+    @Transactional
+    public void updateBookingAndPaymentStatus(String orderId, boolean isSuccess) {
+        try {
+            System.out.println("Bắt đầu cập nhật trạng thái cho orderId: " + orderId + ", isSuccess: " + isSuccess);
+            Payment payment = paymentRepository.findByOrderId(orderId)
+                    .orElseThrow(() -> new NotFoundException("Không tìm thấy thanh toán cho orderId: " + orderId));
+            Booking booking = payment.getBooking();
+            if (booking == null) {
+                System.out.println("Không tìm thấy booking cho payment: " + payment.getPaymentId());
+                throw new NotFoundException("Không tìm thấy booking cho payment: " + payment.getPaymentId());
+            }
+
+            if (isSuccess) {
+                payment.setStatus(PaymentStatus.APPROVED);
+                booking.setStatus(BookingStatus.BOOKED);
+                for (ShowSeat seat : booking.getSeats()) {
+                    seat.setStatus(ESeatStatus.BOOKED);
+                    showSeatRepository.saveAndFlush(seat);
+                }
+                System.out.println("Cập nhật payment: " + payment.getPaymentId() + " thành APPROVED và booking: " + booking.getId() + " thành BOOKED");
+            } else {
+                payment.setStatus(PaymentStatus.CANCELLED);
+                booking.setStatus(BookingStatus.CANCELLED);
+                for (ShowSeat seat : booking.getSeats()) {
+                    seat.setStatus(ESeatStatus.AVAILABLE);
+                    showSeatRepository.saveAndFlush(seat);
+                }
+                System.out.println("Cập nhật payment: " + payment.getPaymentId() + " thành CANCELLED và booking: " + booking.getId() + " thành CANCELLED");
+            }
+
+            paymentRepository.saveAndFlush(payment);
+            bookingRepository.saveAndFlush(booking);
+            System.out.println("Đã lưu thay đổi cho orderId: " + orderId);
+        } catch (Exception e) {
+            System.out.println("Lỗi khi cập nhật trạng thái cho orderId: " + orderId + ": " + e.getMessage());
+            throw new RuntimeException("Lỗi khi cập nhật trạng thái: " + e.getMessage(), e);
+        }
     }
 
     @Override

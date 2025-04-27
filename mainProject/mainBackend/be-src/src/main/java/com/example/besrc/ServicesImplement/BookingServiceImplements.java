@@ -155,21 +155,29 @@ public class BookingServiceImplements implements BookingService {
             boolean hasPayment = payment != null;
 
             if (minutesElapsed >= TIMEOUT_MINUTES || (hasPayment && payment.getStatus() != PaymentStatus.PENDING)) {
-                if (hasPayment && payment.getStatus() == PaymentStatus.PENDING) {
+                if (hasPayment && payment.getStatus() == PaymentStatus.PENDING && "VNPAY".equalsIgnoreCase(payment.getPaymentType())) {
                     try {
                         int result = VNPay.verifyPayment(payment);
                         payment.setStatus(result == 0 ? PaymentStatus.APPROVED : PaymentStatus.CANCELLED);
                         paymentRepository.save(payment);
+                        System.out.println("Verified VNPay payment: " + payment.getPaymentId() + ", status: " + payment.getStatus());
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        System.out.println("Error verifying VNPay payment: " + e.getMessage());
                     }
                 }
                 if (hasPayment && payment.getStatus() == PaymentStatus.APPROVED) {
                     updateSeatStatus(booking, BookingStatus.BOOKED, ESeatStatus.BOOKED);
                     paymentService.addPaymentMail(payment);
+                    System.out.println("Booking " + booking.getId() + " marked as BOOKED, payment " + payment.getPaymentId() + " APPROVED");
                 } else {
                     updateSeatStatus(booking, BookingStatus.CANCELLED, ESeatStatus.AVAILABLE);
+                    if (hasPayment) {
+                        payment.setStatus(PaymentStatus.CANCELLED);
+                        paymentRepository.save(payment);
+                        System.out.println("Booking " + booking.getId() + " and payment " + payment.getPaymentId() + " marked as CANCELLED");
+                    }
                     spamAccounts.offer(booking.getAccount());
+                    System.out.println("Account " + booking.getAccount().getUsername() + " added to spam queue for booking " + booking.getId());
                 }
             }
         });

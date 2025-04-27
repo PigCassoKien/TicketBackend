@@ -21,4 +21,6 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     List<Payment> findAllByBookingIdIn(List<String> bookingIds);
 
     List<Payment> findAllByCreateAtBetween(Date startDate, Date endDate);
+
+    Optional<Payment> findByOrderId(String orderId);
 }
