@@ -46,11 +46,12 @@ EXPOSE 8080
 
 # Thiết lập biến môi trường không nhạy cảm
 ENV PORT=8080 \
-    SPRING_DATASOURCE_URL=jdbc:mysql://192.168.1.51:3306/ticketDB?useSSL=false&serverTimezone=UTC \
+    SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/ticketDB?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh \
     SPRING_DATASOURCE_USERNAME=root \
+    SPRING_DATASOURCE_PASSWORD=kien123456 \
     VNPAY_TMN_CODE=S9J1L8QI \
-    VNPAY_RETURN_URL=https://localhost:8080/api/payment/order-complete \
-    VNPAY_IPN_URL=https://localhost:8080/api/payment/ipn
+    VNPAY_RETURN_URL=https://ticketcinemaweb.onrender.com/api/payment/order-complete \
+    VNPAY_IPN_URL=https://ticketcinemaweb.onrender.com/api/payment/ipn
 
 # Chạy ứng dụng
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -12,8 +12,27 @@ services:
       - .env
     environment:
       - PORT=8080
-      - SPRING_DATASOURCE_URL=jdbc:mysql://192.168.1.51:3306/ticketDB?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/ticketDB?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
       - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=kien123456
       - VNPAY_TMN_CODE=S9J1L8QI
     container_name: ticketcinema-backend
     restart: unless-stopped
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=kien123456
+      - MYSQL_DATABASE=ticketDB
+      - MYSQL_ROOT_HOST=%
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    container_name: ticketcinema-mysql
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
