@@ -94,7 +94,7 @@ const PaymentPage = ({ isLoggedIn, onLogout, onLoginClick, onRegisterClick }) =>
       };
 
       const paymentResponse = await axios.post(
-        `https://localhost:8443/api/payment/create`,
+        `https://localhost:8080/api/payment/create`,
         paymentRequest,
         {
           headers: {

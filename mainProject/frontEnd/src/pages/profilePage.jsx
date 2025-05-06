@@ -117,7 +117,7 @@ const ProfilePage = () => {
       }
 
       try {
-        const response = await fetch("https://localhost:8443/api/account/getMyAccountInformation", {
+        const response = await fetch("https://localhost:8080/api/account/getMyAccountInformation", {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -168,7 +168,7 @@ const ProfilePage = () => {
 
         try {
           setLoading(true);
-          const response = await fetch("https://localhost:8443/api/booking/all", {
+          const response = await fetch("https://localhost:8080/api/booking/all", {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -206,7 +206,7 @@ const ProfilePage = () => {
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("Bạn chưa đăng nhập! Vui lòng đăng nhập lại.");
 
-      const response = await fetch("https://localhost:8443/api/account/update-profile", {
+      const response = await fetch("https://localhost:8080/api/account/update-profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -245,7 +245,7 @@ const ProfilePage = () => {
     try {
       setModalLoading(true);
       setModalError("");
-      const response = await fetch(`https://localhost:8443/api/booking/${bookingId}`, {
+      const response = await fetch(`https://localhost:8080/api/booking/${bookingId}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -528,7 +528,7 @@ const ProfilePage = () => {
                     <h3 className="text-xl font-semibold">Lỗi</h3>
                     <motion.button onClick={() => setShowModal(false)} variants={buttonVariants}>
                       <svg
-                        xmlns="http://www.w3.org/2000/svg"
+                        xmlns="https://www.w3.org/2000/svg"
                         className="h-5 w-5 text-white"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -561,7 +561,7 @@ const ProfilePage = () => {
                     <h3 className="text-xl font-semibold">{selectedBooking.filmName}</h3>
                     <motion.button onClick={() => setShowModal(false)} variants={buttonVariants}>
                       <svg
-                        xmlns="http://www.w3.org/2000/svg"
+                        xmlns="https://www.w3.org/2000/svg"
                         className="h-5 w-5 text-white"
                         fill="none"
                         viewBox="0 0 24 24"

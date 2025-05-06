@@ -57,7 +57,7 @@ const MovieDetailPage = ({ isLoggedIn, setIsLoggedIn }) => {
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
-        const response = await axios.get(`https://localhost:8443/api/film/getFilm/${id}`);
+        const response = await axios.get(`https://localhost:8080/api/film/getFilm/${id}`);
         console.log("Phản hồi API phim:", response.data);
         setMovie({
           ...response.data,
@@ -72,7 +72,7 @@ const MovieDetailPage = ({ isLoggedIn, setIsLoggedIn }) => {
 
     const fetchShowtimes = async () => {
       try {
-        const response = await axios.get(`https://localhost:8443/api/show/getByFilm?filmId=${id}`);
+        const response = await axios.get(`https://localhost:8080/api/show/getByFilm?filmId=${id}`);
         const sortedShowtimes = response.data.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
         setShowtimes(sortedShowtimes);
 
@@ -145,7 +145,7 @@ const MovieDetailPage = ({ isLoggedIn, setIsLoggedIn }) => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|shorts\/))([^#&?]*)/);
     return match ? match[1] : null;
   };
-  const BASE_URL = "https://localhost:8443/largeImages";
+  const BASE_URL = "https://localhost:8080/largeImages";
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "/placeholder.jpg";
     if (imagePath.startsWith("http")) return imagePath;
@@ -185,7 +185,7 @@ const MovieDetailPage = ({ isLoggedIn, setIsLoggedIn }) => {
             <motion.img
               src={
                 movie.image
-                  ? `https://localhost:8443/filmImages/${movie.image}`
+                  ? `https://localhost:8080/filmImages/${movie.image}`
                   : "/placeholder.jpg"
               }
               alt={movie.title}

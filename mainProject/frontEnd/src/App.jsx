@@ -15,7 +15,7 @@ import ManageFilmsPage from "./fe-admin/pages/ManageFilmPage";
 import ManageShowtimesPage from "./fe-admin/pages/ManageShowtimesPage";
 import ProtectedRoute from "./components/ProtectRoute";
 import SearchResultsPage from "./pages/SearchResultPage";
-import PaymentPage from "./pages/PaymentPage";
+import PaymentPage from "./pages/paymentPage";
 
 // Placeholder pages for navbar links
 const NewsPage = () => <div>Tin tức</div>;

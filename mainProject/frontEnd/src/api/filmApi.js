@@ -1,5 +1,5 @@
 // src/api/filmApi.js
-const BASE_URL = "https://localhost:8443/api/film";
+const BASE_URL = "https://localhost:8080/api/film";
 
 export const getMoviesByStatus = async (status) => {
   try {
@@ -38,7 +38,7 @@ export const getShowtimesByFilm = async (filmId) => {
 
     console.log(`Fetching showtimes for filmId: ${filmId}`);
 
-    const response = await fetch(`https://localhost:8443/api/show/getByFilm?filmId=${filmId}`, {
+    const response = await fetch(`https://localhost:8080/api/show/getByFilm?filmId=${filmId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

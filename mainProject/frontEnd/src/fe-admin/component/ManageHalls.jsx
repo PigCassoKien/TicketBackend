@@ -18,7 +18,7 @@ const HallSeatsModal = ({ hall, isOpen, onClose }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("accessToken"); // Hoặc lấy từ context/state
-      const response = await axios.get(`https://localhost:8443/api/hall/${hall.id}/seats`, {
+      const response = await axios.get(`https://localhost:8080/api/hall/${hall.id}/seats`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -27,7 +27,7 @@ public class VNPay extends HttpServlet {
     private static final String vnp_Version = "2.1.0";
     private static final String vnp_TmnCode = "S9J1L8QI";
     private static final String vnp_HashSecret = "BI2UVPUUVRBTZTTBWO56PB48OZBUT37A";
-    private static final String vnp_Returnurl = "https://localhost:8443/api/payment/order-complete";
+    private static final String vnp_Returnurl = "https://localhost:8080/api/payment/order-complete";
     private static final String vnp_apiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
 
     public static String getVnp_TmnCode() {

@@ -30,7 +30,7 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
   const fetchSeats = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://localhost:8443/api/show/${showId}/seats`);
+      const response = await axios.get(`https://localhost:8080/api/show/${showId}/seats`);
       const seatsData = response.data || [];
 
       console.log("Seats from API:", seatsData);
@@ -92,7 +92,7 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
       };
 
       const bookingResponse = await axios.post(
-        `https://localhost:8443/api/booking/create`,
+        `https://localhost:8080/api/booking/create`,
         bookingRequest,
         {
           headers: {
