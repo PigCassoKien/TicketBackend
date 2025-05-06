@@ -4,7 +4,7 @@ services:
   backend:
     image: ticketcinema-backend
     build:
-      context: ./mainProject/mainBackend/be-src
+      context: ./mainBackend/be-src
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
