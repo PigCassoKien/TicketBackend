@@ -15,6 +15,7 @@ COPY mainProject/mainBackend/be-src/src ./src
 
 # Copy chứng chỉ SSL (keystore.p12) vào thư mục resources
 COPY mainProject/mainBackend/be-src/src/main/resources/keystore.p12 ./src/main/resources/
+COPY mainProject/mainBackend/be-src/src/main/resources/static ./src/main/resources/static
 
 # Build dự án với encoding UTF-8 và bỏ qua test
 RUN mvn clean package -DskipTests -Dfile.encoding=UTF-8
@@ -40,7 +41,7 @@ COPY --from=builder /app/target/be-src-0.0.1-SNAPSHOT.jar app.jar
 
 # Copy chứng chỉ SSL
 COPY --from=builder /app/src/main/resources/keystore.p12 /app/keystore.p12
-
+COPY --from=builder /app/src/main/resources/static /app/src/main/resources/static
 # Mở cổng 8080
 EXPOSE 8080
 

@@ -7,9 +7,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8080', // Đổi thành địa chỉ BE
+        target: 'https://ticketcinema-backend.onrender.com', // Cập nhật thành địa chỉ backend live
         changeOrigin: true,
-        secure: false,
+        secure: true, // Đảm bảo sử dụng HTTPS vì backend trên Render chạy qua HTTPS
       },
     },
   },
