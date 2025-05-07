@@ -88,7 +88,7 @@ const ManageFilmsPage = () => {
         if (refreshToken) {
           try {
             const refreshResponse = await axios.post(
-              "https://localhost:8080/api/auth/refresh-token",
+              "https://ticketcinema-backend.onrender.com/api/auth/refresh-token",
               { refreshToken }
             );
             const newAccessToken = refreshResponse.data.accessToken;
@@ -180,7 +180,7 @@ const ManageFilmsPage = () => {
 
     try {
       const response = await axios.get(
-        `https://localhost:8080/api/film/searchFilmsByPrefix?prefix=${encodeURIComponent(trimmedSearchTerm)}&pageNumber=0&pageSize=50`,
+        `https://ticketcinema-backend.onrender.com/api/film/searchFilmsByPrefix?prefix=${encodeURIComponent(trimmedSearchTerm)}&pageNumber=0&pageSize=50`,
         {
           headers: { "Content-Type": "application/json" },
         }
@@ -279,7 +279,7 @@ const ManageFilmsPage = () => {
     try {
       const response = await makeAuthenticatedRequest({
         method: "POST",
-        url: "https://localhost:8080/api/film/addFilm",
+        url: "https://ticketcinema-backend.onrender.com/api/film/addFilm",
         data: formData,
         headers: {
           "Content-Type": "multipart/form-data",
@@ -342,7 +342,7 @@ const ManageFilmsPage = () => {
     try {
       const response = await makeAuthenticatedRequest({
         method: "PUT",
-        url: `https://localhost:8080/api/film/updateFilm/${filmToEdit.id}`,
+        url: `https://ticketcinema-backend.onrender.com/api/film/updateFilm/${filmToEdit.id}`,
         data: formData,
         headers: {
           "Content-Type": "multipart/form-data",
@@ -402,7 +402,7 @@ const ManageFilmsPage = () => {
     try {
       const response = await makeAuthenticatedRequest({
         method: "DELETE",
-        url: `https://localhost:8080/api/film/remove/${filmToDelete}`,
+        url: `https://ticketcinema-backend.onrender.com/api/film/remove/${filmToDelete}`,
       });
 
       if (response?.status === 200) {
@@ -1164,7 +1164,7 @@ const ManageFilmsPage = () => {
                   {selectedFilm.image ? (
                     <div className="mt-2">
                       <img
-                        src={`https://localhost:8080/filmImages/${selectedFilm.image}`}
+                        src={`https://ticketcinema-backend.onrender.com/filmImages/${selectedFilm.image}`}
                         alt={selectedFilm.title}
                         className="w-32 h-48 object-cover rounded-lg"
                         onError={(e) => (e.target.src = "/path/to/fallback-image.jpg")}
@@ -1179,7 +1179,7 @@ const ManageFilmsPage = () => {
                   {selectedFilm.largeImage ? (
                     <div className="mt-2">
                       <img
-                        src={`https://localhost:8080/largeImages/${selectedFilm.largeImage}`}
+                        src={`https://ticketcinema-backend.onrender.com/largeImages/${selectedFilm.largeImage}`}
                         alt={selectedFilm.title}
                         className="w-48 h-32 object-cover rounded-lg"
                         onError={(e) => (e.target.src = "/path/to/fallback-image.jpg")}

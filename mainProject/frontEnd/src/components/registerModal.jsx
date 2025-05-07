@@ -40,7 +40,7 @@ const RegisterModal = ({ isOpen, onClose, switchToLogin }) => {
     setErrorMessage(""); // Reset lỗi nếu có
 
     try {
-      const response = await fetch("https://localhost:8080/api/auth/signup", {
+      const response = await fetch("https://ticketcinema-backend.onrender.com/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

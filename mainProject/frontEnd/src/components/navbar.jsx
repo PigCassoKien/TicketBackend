@@ -101,7 +101,7 @@ const Navbar = ({ isLoggedIn, onRegisterClick, onLoginClick, onLogout }) => {
 
     try {
       const response = await axios.get(
-        `https://localhost:8080/api/film/searchFilmsByPrefix?prefix=${encodeURIComponent(prefix)}&pageNumber=0&pageSize=50`,
+        `https://ticketcinema-backend.onrender.com/api/film/searchFilmsByPrefix?prefix=${encodeURIComponent(prefix)}&pageNumber=0&pageSize=50`,
         {
           headers: { "Content-Type": "application/json" },
         }
@@ -126,7 +126,7 @@ const Navbar = ({ isLoggedIn, onRegisterClick, onLoginClick, onLogout }) => {
     if (e.key === "Enter" && searchTerm.trim()) {
       try {
         const response = await axios.get(
-          `https://localhost:8080/api/film/searchFilmsByPrefix?prefix=${encodeURIComponent(searchTerm)}&pageNumber=0&pageSize=50`,
+          `https://ticketcinema-backend.onrender.com/api/film/searchFilmsByPrefix?prefix=${encodeURIComponent(searchTerm)}&pageNumber=0&pageSize=50`,
           {
             headers: { "Content-Type": "application/json" },
           }
@@ -283,7 +283,7 @@ const Navbar = ({ isLoggedIn, onRegisterClick, onLoginClick, onLogout }) => {
                           <img
                             src={
                               film.image
-                                ? `https://localhost:8080/filmImages/${film.image}`
+                                ? `https://ticketcinema-backend.onrender.com/filmImages/${film.image}`
                                 : "/placeholder.jpg"
                             }
                             alt={film.title}
