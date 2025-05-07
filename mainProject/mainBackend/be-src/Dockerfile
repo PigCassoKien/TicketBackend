@@ -46,9 +46,9 @@ EXPOSE 8080
 
 # Thiết lập biến môi trường không nhạy cảm
 ENV PORT=8080 \
-    SPRING_DATASOURCE_URL=jdbc:mysql://sql106.infinityfree.com:3306/if0_12345_ticketdb?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh \
-    SPRING_DATASOURCE_USERNAME=if0_12345_root \
-    SPRING_DATASOURCE_PASSWORD=kien123456 \
+    SPRING_DATASOURCE_URL=jdbc:mysql://hopper.proxy.rlwy.net:54188/railway?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh \
+    SPRING_DATASOURCE_USERNAME=root \
+    SPRING_DATASOURCE_PASSWORD=tIjdjoWqHruYbQwULJEYynCYOUVOtCHC \
     VNPAY_TMN_CODE=S9J1L8QI \
     VNPAY_RETURN_URL=https://ticketcinemaweb.onrender.com/api/payment/order-complete \
     VNPAY_IPN_URL=https://ticketcinemaweb.onrender.com/api/payment/ipn
