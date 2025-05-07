@@ -1,51 +1,22 @@
 # Stage 1: Build stage
 FROM openjdk:21-jdk-slim AS builder
-
-# Cài đặt Maven và các công cụ cần thiết
-RUN apt-get update && \
-    apt-get install -y maven && \
-    rm -rf /var/lib/apt/lists/*
-
-# Tạo thư mục làm việc
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-
-# Copy file cấu hình Maven và mã nguồn từ thư mục cha
 COPY mainProject/mainBackend/be-src/pom.xml .
 COPY mainProject/mainBackend/be-src/src ./src
-
-# Copy chứng chỉ SSL (keystore.p12) vào thư mục resources
 COPY mainProject/mainBackend/be-src/src/main/resources/keystore.p12 ./src/main/resources/
 COPY mainProject/mainBackend/be-src/src/main/resources/static ./src/main/resources/static
-
-# Build dự án với encoding UTF-8 và bỏ qua test
 RUN mvn clean package -DskipTests -Dfile.encoding=UTF-8
 
 # Stage 2: Runtime stage
 FROM openjdk:21-jdk-slim
-
-# Cài đặt curl và tzdata, thiết lập múi giờ
-RUN apt-get update && \
-    apt-get install -y curl tzdata && \
-    ln -snf /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime && \
-    echo "Asia/Ho_Chi_Minh" > /etc/timezone && \
-    rm -rf /var/lib/apt/lists/*
-
-# Thiết lập encoding
+RUN apt-get update && apt-get install -y curl tzdata && ln -snf /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime && echo "Asia/Ho_Chi_Minh" > /etc/timezone && rm -rf /var/lib/apt/lists/*
 ENV LANG=en_US.UTF-8
-
-# Tạo thư mục làm việc
 WORKDIR /app
-
-# Copy file JAR từ stage build
 COPY --from=builder /app/target/be-src-0.0.1-SNAPSHOT.jar app.jar
-
-# Copy chứng chỉ SSL
 COPY --from=builder /app/src/main/resources/keystore.p12 /app/keystore.p12
 COPY --from=builder /app/src/main/resources/static /app/src/main/resources/static
-# Mở cổng 8080
 EXPOSE 8080
-
-# Thiết lập biến môi trường không nhạy cảm
 ENV PORT=8080 \
     SPRING_DATASOURCE_URL=jdbc:mysql://metro.proxy.rlwy.net:22869/ticketdb?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh \
     SPRING_DATASOURCE_USERNAME=root \
@@ -53,6 +24,4 @@ ENV PORT=8080 \
     VNPAY_TMN_CODE=S9J1L8QI \
     VNPAY_RETURN_URL=https://ticketcinemaweb.onrender.com/api/payment/order-complete \
     VNPAY_IPN_URL=https://ticketcinemaweb.onrender.com/api/payment/ipn
-
-# Chạy ứng dụng
 ENTRYPOINT ["java", "-jar", "app.jar"]
