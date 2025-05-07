@@ -30,7 +30,7 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
   const fetchSeats = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://ticketcinema-backend.onrender.com/api/show/${showId}/seats`);
+      const response = await axios.get(`https://ticketcinemaweb.onrender.com/api/show/${showId}/seats`);
       const seatsData = response.data || [];
 
       console.log("Seats from API:", seatsData);
@@ -92,7 +92,7 @@ const SeatSelectionModal = ({ showId, isOpen, onClose, movie, show }) => {
       };
 
       const bookingResponse = await axios.post(
-        `https://ticketcinema-backend.onrender.com/api/booking/create`,
+        `https://ticketcinemaweb.onrender.com/api/booking/create`,
         bookingRequest,
         {
           headers: {

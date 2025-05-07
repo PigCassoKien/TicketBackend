@@ -117,7 +117,7 @@ const ProfilePage = () => {
       }
 
       try {
-        const response = await fetch("https://ticketcinema-backend.onrender.com/api/account/getMyAccountInformation", {
+        const response = await fetch("https://ticketcinemaweb.onrender.com/api/account/getMyAccountInformation", {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -168,7 +168,7 @@ const ProfilePage = () => {
 
         try {
           setLoading(true);
-          const response = await fetch("https://ticketcinema-backend.onrender.com/api/booking/all", {
+          const response = await fetch("https://ticketcinemaweb.onrender.com/api/booking/all", {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -206,7 +206,7 @@ const ProfilePage = () => {
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("Bạn chưa đăng nhập! Vui lòng đăng nhập lại.");
 
-      const response = await fetch("https://ticketcinema-backend.onrender.com/api/account/update-profile", {
+      const response = await fetch("https://ticketcinemaweb.onrender.com/api/account/update-profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -245,7 +245,7 @@ const ProfilePage = () => {
     try {
       setModalLoading(true);
       setModalError("");
-      const response = await fetch(`https://ticketcinema-backend.onrender.com/api/booking/${bookingId}`, {
+      const response = await fetch(`https://ticketcinemaweb.onrender.com/api/booking/${bookingId}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });

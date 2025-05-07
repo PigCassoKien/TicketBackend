@@ -281,7 +281,7 @@ const SearchResultsPage = () => {
                       <motion.img
                         src={
                           movie.image
-                            ? `https://ticketcinema-backend.onrender.com/filmImages/${movie.image}`
+                            ? `https://ticketcinemaweb.onrender.com/filmImages/${movie.image}`
                             : "/placeholder.jpg"
                         }
                         alt={movie.title}

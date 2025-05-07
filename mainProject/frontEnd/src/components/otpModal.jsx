@@ -51,7 +51,7 @@ const OtpModal = ({ isOpen, onClose, email }) => {
     setError("");
 
     try {
-      const response = await fetch(`https://ticketcinema-backend.onrender.com/api/auth/verify/${email}/${enteredOtp}`, {
+      const response = await fetch(`https://ticketcinemaweb.onrender.com/api/auth/verify/${email}/${enteredOtp}`, {
         method: "GET",
         credentials: "include",
       });

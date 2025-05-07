@@ -94,7 +94,7 @@ const PaymentPage = ({ isLoggedIn, onLogout, onLoginClick, onRegisterClick }) =>
       };
 
       const paymentResponse = await axios.post(
-        `https://ticketcinema-backend.onrender.com/api/payment/create`,
+        `https://ticketcinemaweb.onrender.com/api/payment/create`,
         paymentRequest,
         {
           headers: {

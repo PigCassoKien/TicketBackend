@@ -20,7 +20,7 @@ const ShowSeatsModal = ({ show, isOpen, onClose }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`https://ticketcinema-backend.onrender.com/api/show/${show.id}/seats`, {
+      const response = await axios.get(`https://ticketcinemaweb.onrender.com/api/show/${show.id}/seats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("Seats Response:", response.data);
@@ -154,7 +154,7 @@ const ShowInfoModal = ({ show, isOpen, onClose }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`https://ticketcinema-backend.onrender.com/api/show/${show.id}`, {
+      const response = await axios.get(`https://ticketcinemaweb.onrender.com/api/show/${show.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setShowInfo(response.data);
@@ -236,7 +236,7 @@ const ManageShowtimes = () => {
   const fetchShows = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get("https://ticketcinema-backend.onrender.com/api/show/allShow", {
+      const response = await axios.get("https://ticketcinemaweb.onrender.com/api/show/allShow", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setShows(response.data);
@@ -262,7 +262,7 @@ const ManageShowtimes = () => {
       let filmsData = [];
   
       try {
-        const hallsResponse = await axios.get("https://ticketcinema-backend.onrender.com/api/hall/all", {
+        const hallsResponse = await axios.get("https://ticketcinemaweb.onrender.com/api/hall/all", {
           headers: { Authorization: `Bearer ${token}` },
         });
         hallsData = hallsResponse.data;
@@ -318,7 +318,7 @@ const ManageShowtimes = () => {
       const token = localStorage.getItem("accessToken");
       const combinedDateTime = `${newShow.startDate}T${newShow.startTime}:00`;
       const response = await axios.post(
-        "https://ticketcinema-backend.onrender.com/api/show/addShow",
+        "https://ticketcinemaweb.onrender.com/api/show/addShow",
         {
           hallId: newShow.hallId,
           filmId: newShow.filmId, // Fixed typo: changed "fieldId" to "filmId"
@@ -346,7 +346,7 @@ const ManageShowtimes = () => {
       const token = localStorage.getItem("accessToken");
       const combinedDateTime = `${newShow.startDate}T${newShow.startTime}:00`;
       const response = await axios.put(
-        `https://ticketcinema-backend.onrender.com/api/show/updateShow/${showToEdit.id}`,
+        `https://ticketcinemaweb.onrender.com/api/show/updateShow/${showToEdit.id}`,
         {
           hallId: newShow.hallId,
           filmId: newShow.filmId,
@@ -369,7 +369,7 @@ const ManageShowtimes = () => {
     if (!showToDelete) return;
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.delete(`https://ticketcinema-backend.onrender.com/api/show/delete/${showToDelete}`, {
+      const response = await axios.delete(`https://ticketcinemaweb.onrender.com/api/show/delete/${showToDelete}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data.message === "Show and its seats deleted successfully") {
