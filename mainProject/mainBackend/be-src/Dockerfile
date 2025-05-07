@@ -9,12 +9,12 @@ RUN apt-get update && \
 # Tạo thư mục làm việc
 WORKDIR /app
 
-# Copy file cấu hình Maven và mã nguồn
-COPY pom.xml .
-COPY src ./src
+# Copy file cấu hình Maven và mã nguồn từ thư mục cha
+COPY mainProject/mainBackend/be-src/pom.xml .
+COPY mainProject/mainBackend/be-src/src ./src
 
 # Copy chứng chỉ SSL (keystore.p12) vào thư mục resources
-COPY src/main/resources/keystore.p12 ./src/main/resources/
+COPY mainProject/mainBackend/be-src/src/main/resources/keystore.p12 ./src/main/resources/
 
 # Build dự án với encoding UTF-8 và bỏ qua test
 RUN mvn clean package -DskipTests -Dfile.encoding=UTF-8
@@ -46,8 +46,8 @@ EXPOSE 8080
 
 # Thiết lập biến môi trường không nhạy cảm
 ENV PORT=8080 \
-    SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/ticketDB?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh \
-    SPRING_DATASOURCE_USERNAME=root \
+    SPRING_DATASOURCE_URL=jdbc:mysql://sql106.infinityfree.com:3306/if0_12345_ticketdb?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh \
+    SPRING_DATASOURCE_USERNAME=if0_12345_root \
     SPRING_DATASOURCE_PASSWORD=kien123456 \
     VNPAY_TMN_CODE=S9J1L8QI \
     VNPAY_RETURN_URL=https://ticketcinemaweb.onrender.com/api/payment/order-complete \
