@@ -1,6 +1,6 @@
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion"; // Import Framer Motion
+import { motion, AnimatePresence } from "framer-motion";
 import { jwtDecode } from "jwt-decode";
 import Navbar from "./components/navbar";
 import RegisterModal from "./components/registerModal";
@@ -13,11 +13,14 @@ import AdminPage from "./fe-admin/pages/AdminPage";
 import ManageUsersPage from "./fe-admin/pages/ManageUsersPage";
 import ManageFilmsPage from "./fe-admin/pages/ManageFilmPage";
 import ManageShowtimesPage from "./fe-admin/pages/ManageShowtimesPage";
+import AdminBookingPage from "./fe-admin/pages/BookingPage";
 import ProtectedRoute from "./components/ProtectRoute";
 import SearchResultsPage from "./pages/SearchResultPage";
 import PaymentPage from "./pages/paymentPage";
+import PaymentManagementPage from "./fe-admin/pages/PaymentManagementPage"; // Thêm import
+import axios from "axios";
 
-// Placeholder pages for navbar links
+// Placeholder pages
 const NewsPage = () => <div>Tin tức</div>;
 const PromotionsPage = () => <div>Khuyến mãi</div>;
 const TicketPricePage = () => <div>Giá vé</div>;
@@ -26,15 +29,11 @@ const AboutPage = () => <div>Giới thiệu</div>;
 const TicketsPage = () => <div>Vé của tôi</div>;
 const SettingsPage = () => <div>Cài đặt</div>;
 
-// Placeholder pages for admin routes
-const ManageBookingsPage = () => <div>Quản lý đặt vé</div>;
-const ManagePaymentsPage = () => <div>Quản lý thanh toán</div>;
-
 export default function App() {
   const [authMode, setAuthMode] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation(); // Sử dụng useLocation để theo dõi route hiện tại
+  const location = useLocation();
 
   const checkLoginStatus = () => {
     const token = localStorage.getItem("accessToken");
@@ -93,7 +92,6 @@ export default function App() {
     console.log("🔍 App.js - accessToken sau khi đăng xuất:", localStorage.getItem("accessToken"));
   };
 
-  // Animation variants
   const pageVariants = {
     initial: { opacity: 0, y: 20 },
     in: { opacity: 1, y: 0 },
@@ -294,7 +292,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          {/* Admin Routes */}
           <Route
             path="/admin"
             element={
@@ -370,7 +367,7 @@ export default function App() {
                   variants={pageVariants}
                   transition={pageTransition}
                 >
-                  <ManageBookingsPage />
+                  <AdminBookingPage />
                 </motion.div>
               </ProtectedRoute>
             }
@@ -386,12 +383,11 @@ export default function App() {
                   variants={pageVariants}
                   transition={pageTransition}
                 >
-                  <ManagePaymentsPage />
+                  <PaymentManagementPage /> {/* Thay thế ManagePaymentsPage bằng PaymentManagementPage */}
                 </motion.div>
               </ProtectedRoute>
             }
           />
-          {/* Payment Route */}
           <Route
             path="/payment/:bookingId/:totalPrice/:seatCount"
             element={

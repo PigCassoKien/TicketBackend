@@ -33,4 +33,6 @@ public interface PaymentService {
     public double getTotalPaidByShow (String showId);
 
     MyApiResponse getMyTotalPaid();
+    public Map<String, String> checkPaymentStatus(String username, String paymentId);
+
 }

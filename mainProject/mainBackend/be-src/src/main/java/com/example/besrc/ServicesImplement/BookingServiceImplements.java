@@ -11,6 +11,7 @@ import com.example.besrc.utils.VNPay;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,7 +58,6 @@ public class BookingServiceImplements implements BookingService {
         return seat;
     }
 
-
     public void updateSeatStatus(Booking booking, BookingStatus bookingStatus, ESeatStatus seatStatus) {
         booking.setStatus(bookingStatus);
         bookingRepository.save(booking);
@@ -68,7 +68,6 @@ public class BookingServiceImplements implements BookingService {
             System.out.println("✅ Updated seat ID: " + showSeat.getId() + " -> " + seatStatus);
         }
     }
-
 
     @Override
     public BookingResponse createBooking(String username, BookingRequest request) {
@@ -134,9 +133,15 @@ public class BookingServiceImplements implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Username " + username + " not found"));
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking ID " + bookingId + " not found"));
-        if (!account.getId().equals(booking.getAccount().getId())) {
+
+        // Kiểm tra quyền truy cập
+        boolean isAdminOrSuperAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN") || authority.getAuthority().equals("ROLE_SUPER_ADMIN"));
+
+        if (!isAdminOrSuperAdmin && !account.getId().equals(booking.getAccount().getId())) {
             throw new ConflictException("Unauthorized access to booking ID " + bookingId);
         }
+
         return booking;
     }
 
@@ -181,5 +186,134 @@ public class BookingServiceImplements implements BookingService {
                 }
             }
         });
+    }
+
+    @Override
+    public List<BookingResponse> getAllBookings() {
+        List<Booking> bookings = bookingRepository.findAll();
+        return bookings.stream().map(BookingResponse::new).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public MyApiResponse updateBooking(String username, String bookingId, BookingUpdateRequest updateRequest) {
+
+        // 1. Kiểm tra quyền truy cập
+        Account account = accountRepository.getByUsername(username)
+                .orElseThrow(() -> new NotFoundException("Username " + username + " not found"));
+        boolean isAdminOrSuperAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN") || authority.getAuthority().equals("ROLE_SUPER_ADMIN"));
+
+        // 2. Tìm booking
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException("Booking ID not found"));
+
+        // Kiểm tra quyền sở hữu hoặc vai trò admin
+        if (!isAdminOrSuperAdmin && !account.getId().equals(booking.getAccount().getId())) {
+            throw new ConflictException("Unauthorized access to booking ID " + bookingId);
+        }
+
+        // 3. Kiểm tra trạng thái booking cho người dùng thường
+        if (!isAdminOrSuperAdmin && booking.getStatus() != BookingStatus.PENDING) {
+            throw new BadRequestException("Only PENDING bookings can be updated by non-admins");
+        }
+
+        // 4. Xử lý thay đổi trạng thái booking
+        if (updateRequest.getStatus() != null) {
+            try {
+                BookingStatus newStatus = BookingStatus.valueOf(String.valueOf(updateRequest.getStatus()));
+                // Không cho phép chuyển từ BOOKED về PENDING
+                if (booking.getStatus() == BookingStatus.BOOKED && newStatus == BookingStatus.PENDING) {
+                    throw new BadRequestException("Cannot change BOOKED booking to PENDING");
+                }
+                // Nếu chuyển thành CANCELLED, đặt tất cả ghế về AVAILABLE
+                if (newStatus == BookingStatus.CANCELLED) {
+                    for (ShowSeat seat : booking.getSeats()) {
+                        seat.setStatus(ESeatStatus.AVAILABLE);
+                        showSeatRepository.save(seat);
+                    }
+                    // Không cho phép thay đổi ghế khi hủy
+                    if (updateRequest.getSeatIndex() != null && !updateRequest.getSeatIndex().isEmpty()) {
+                        throw new BadRequestException("Cannot update seats when cancelling booking");
+                    }
+                }
+                booking.setStatus(newStatus);
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Invalid booking status: " + updateRequest.getStatus());
+            }
+        }
+
+        // 5. Xử lý thay đổi ghế
+        if (updateRequest.getSeatIndex() != null && !updateRequest.getSeatIndex().isEmpty()) {
+            // Kiểm tra trạng thái booking
+            if (booking.getStatus() == BookingStatus.CANCELLED ||
+                    (updateRequest.getStatus() != null && BookingStatus.valueOf(String.valueOf(updateRequest.getStatus())) == BookingStatus.CANCELLED)) {
+                throw new BadRequestException("Cannot update seats for CANCELLED booking");
+            }
+
+            Show show = booking.getShow();
+
+            // Kiểm tra giới hạn số ghế
+            if (updateRequest.getSeatIndex().size() > MAX_TICKETS) {
+                throw new BadRequestException("Max seat limit exceeded");
+            }
+
+            // Lấy danh sách ghế hiện tại
+            List<ShowSeat> currentSeats = booking.getSeats();
+            List<String> currentSeatIndexes = currentSeats.stream()
+                    .map(ShowSeat::getSeatIndex)
+                    .toList();
+
+            // Lấy danh sách ghế mới (loại bỏ trùng lặp)
+            List<String> newSeatIndexes = updateRequest.getSeatIndex().stream()
+                    .distinct()
+                    .toList();
+
+            // Đặt trạng thái ghế cũ không còn trong danh sách mới về AVAILABLE
+            List<ShowSeat> seatsToMakeAvailable = currentSeats.stream()
+                    .filter(seat -> !newSeatIndexes.contains(seat.getSeatIndex()))
+                    .toList();
+
+            for (ShowSeat seat : seatsToMakeAvailable) {
+                seat.setStatus(ESeatStatus.AVAILABLE);
+                showSeatRepository.save(seat);
+            }
+
+            // Xử lý danh sách ghế mới
+            List<ShowSeat> newSeats = new ArrayList<>();
+            for (String seatIndex : newSeatIndexes) {
+                // Nếu ghế đã thuộc booking hiện tại, giữ nguyên ghế
+                if (currentSeatIndexes.contains(seatIndex)) {
+                    ShowSeat existingSeat = currentSeats.stream()
+                            .filter(seat -> seat.getSeatIndex().equals(seatIndex))
+                            .findFirst()
+                            .orElseThrow(() -> new NotFoundException("Seat " + seatIndex + " not found in current booking"));
+                    newSeats.add(existingSeat);
+                } else {
+                    // Kiểm tra ghế mới
+                    ShowSeat seat = validateSeat(seatIndex, show);
+                    seat.setStatus(ESeatStatus.BOOKED);
+                    newSeats.add(showSeatRepository.save(seat));
+                }
+            }
+
+            // Cập nhật danh sách ghế mới vào booking
+            booking.setSeats(newSeats);
+        }
+
+        // 6. Lưu booking
+        bookingRepository.save(booking);
+        return new MyApiResponse("OK", HttpStatus.OK.value(), "Booking updated successfully");
+    }
+
+    @Override
+    public MyApiResponse deleteBooking(String username, String bookingId) {
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException("Booking ID not found"));
+
+        updateSeatStatus(booking, BookingStatus.CANCELLED, ESeatStatus.AVAILABLE);
+        bookingRepository.delete(booking);
+        return new MyApiResponse("OK", HttpStatus.OK.value(), "Booking deleted successfully");
     }
 }

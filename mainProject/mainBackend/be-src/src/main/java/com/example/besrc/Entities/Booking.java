@@ -86,7 +86,7 @@ public class Booking {
     public List<String> getNameOfSeats() {
         List<String> names = new ArrayList<>();
         for (ShowSeat seat : this.seats)
-            names.add(seat.getSeat().getName());
+            names.add(seat.getSeatIndex());
         return names;
     }
 

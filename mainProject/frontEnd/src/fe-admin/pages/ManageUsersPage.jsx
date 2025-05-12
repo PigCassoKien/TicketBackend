@@ -40,7 +40,7 @@ const ManageUsersPage = () => {
   useEffect(() => {
     const fetchAllUsers = async () => {
       try {
-        const response = await axios.get("https://ticketcinemaweb.onrender.com/api/account/admin/all", {
+        const response = await axios.get("https://localhost:8080/api/account/admin/all", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -64,7 +64,7 @@ const ManageUsersPage = () => {
 
     try {
       const response = await axios.get(
-        `https://ticketcinemaweb.onrender.com/api/account/admin/search?username=${searchTerm}`,
+        `https://localhost:8080/api/account/admin/search?username=${searchTerm}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -85,7 +85,7 @@ const ManageUsersPage = () => {
   const handleViewUser = async (username) => {
     try {
       const response = await axios.get(
-        `https://ticketcinemaweb.onrender.com/api/account/admin/${username}/information`,
+        `https://localhost:8080/api/account/admin/${username}/information`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -104,7 +104,7 @@ const ManageUsersPage = () => {
     if (!userToDelete) return;
 
     try {
-      await axios.delete(`https://ticketcinemaweb.onrender.com/api/account/admin/delete?username=${userToDelete}`, {
+      await axios.delete(`https://localhost:8080/api/account/admin/delete?username=${userToDelete}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -123,7 +123,7 @@ const ManageUsersPage = () => {
   const handleGiveAdminRole = async () => {
     try {
       const response = await axios.get(
-        `https://ticketcinemaweb.onrender.com/api/account/superadmin/giveAdmin?username=${userForAdminAction}`,
+        `https://localhost:8080/api/account/superadmin/giveAdmin?username=${userForAdminAction}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -131,7 +131,7 @@ const ManageUsersPage = () => {
         }
       );
       alert(response.data.message);
-      const updatedUsers = await axios.get("https://ticketcinemaweb.onrender.com/api/account/admin/all", {
+      const updatedUsers = await axios.get("https://localhost:8080/api/account/admin/all", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -150,7 +150,7 @@ const ManageUsersPage = () => {
   const handleRemoveAdminRole = async () => {
     try {
       const response = await axios.get(
-        `https://ticketcinemaweb.onrender.com/api/account/superadmin/removeAdmin?username=${userForAdminAction}`,
+        `https://localhost:8080/api/account/superadmin/removeAdmin?username=${userForAdminAction}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -158,7 +158,7 @@ const ManageUsersPage = () => {
         }
       );
       alert(response.data.message);
-      const updatedUsers = await axios.get("https://ticketcinemaweb.onrender.com/api/account/admin/all", {
+      const updatedUsers = await axios.get("https://localhost:8080/api/account/admin/all", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

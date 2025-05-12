@@ -21,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -96,12 +97,13 @@ public class PaymentController {
 
     @GetMapping("/order-complete")
     @Operation(summary = "Handle VNPay Return", responses = {
-            @ApiResponse(responseCode = "200",description = "Handle VNPay Return Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyApiResponse.class))),
+            @ApiResponse(responseCode = "200", description = "Handle VNPay Return Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<?> handleVNPayReturn(HttpServletRequest request) {
-        return ResponseEntity.ok().body(paymentService.handleVNPayReturn(request));
+    public ResponseEntity<Map<String, String>> handleVNPayReturn(HttpServletRequest request) {
+        Map<String, String> result = paymentService.handleVNPayReturn(request);
+        return ResponseEntity.ok().body(result);
     }
 
     @GetMapping("/total/account/{username}")
@@ -160,4 +162,17 @@ public class PaymentController {
         return ResponseEntity.ok().body(paymentService.getMyTotalPaid());
     }
 
+    @GetMapping("status/{paymentId}")
+    @Operation(summary = "Check Payment Status by Payment ID", responses = {
+            @ApiResponse(responseCode = "200", description = "Get Payment Status Successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Payment not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    }, parameters = {
+            @Parameter(name = "Authorization", in = ParameterIn.HEADER, schema = @Schema(type = "string"), example = "Bearer <token>", required = true)
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, String>> checkPaymentStatus(Principal principal, @PathVariable(value = "paymentId") @Valid String paymentId) {
+        return ResponseEntity.ok().body(paymentService.checkPaymentStatus(principal.getName(), paymentId));
+    }
 }

@@ -220,9 +220,6 @@ public class PaymentServiceImplement implements PaymentService {
         }
 
         String calculatedHash = VNPay.hmacSHA512(hashData.toString());
-        System.out.println("Hash Data: " + hashData.toString());
-        System.out.println("Calculated Hash: " + calculatedHash);
-        System.out.println("Received Hash: " + vnp_SecureHash);
         if (!calculatedHash.equals(vnp_SecureHash)) {
             response.put("RspCode", "99");
             response.put("Message", "Invalid signature");
@@ -268,16 +265,27 @@ public class PaymentServiceImplement implements PaymentService {
         if (payment.getStatus().equals(PaymentStatus.APPROVED)) {
             response.put("RspCode", "02");
             response.put("Message", "Payment already approved");
+            // Thêm filmId để chuyển hướng
+            Long filmId = cinemaShowRepository.findById(booking.getShow().getId())
+                    .map(show -> show.getFilm().getId())
+                    .orElse(null);
+            response.put("filmId", String.valueOf(filmId));
             System.out.println("Payment already approved: " + response);
             return response;
         }
 
         List<ShowSeat> showSeats = booking.getSeats();
         if (showSeats == null || showSeats.isEmpty()) {
-            response.put("RspCode","99");
-            response.put("Message", "no seats found for Booking ID: " + booking.getId());
+            response.put("RspCode", "99");
+            response.put("Message", "No seats found for Booking ID: " + booking.getId());
             return response;
         }
+
+        // Lấy filmId từ Show
+        Long filmId = cinemaShowRepository.findById(booking.getShow().getId())
+                .map(show -> show.getFilm().getId())
+                .orElse(null);
+        response.put("filmId", String.valueOf(filmId));
 
         if ("00".equals(vnp_ResponseCode) && "00".equals(vnp_TransactionStatus)) {
             try {
@@ -309,7 +317,6 @@ public class PaymentServiceImplement implements PaymentService {
                 System.out.println("Error updating status: " + e.getMessage());
                 return response;
             }
-            return response;
         } else {
             try {
                 payment.setStatus(PaymentStatus.CANCELLED);
@@ -440,7 +447,7 @@ public class PaymentServiceImplement implements PaymentService {
 
     @Override
     public double getTotalPaidByShow(String showId) {
-        if (cinemaShowRepository.existsById(showId)) {
+        if (!cinemaShowRepository.existsById(showId)) {
             throw new NotFoundException("Show ID " + showId + " not found");
         }
 
@@ -486,4 +493,39 @@ public class PaymentServiceImplement implements PaymentService {
                 .sum();
         return new MyApiResponse("OK", HttpStatus.OK.value(), "Total paid: " + amount);
     }
+
+    @Override
+    public Map<String, String> checkPaymentStatus(String username, String paymentId) {
+        Map<String, String> response = new HashMap<>();
+
+        // Kiểm tra paymentId có tồn tại không
+        Payment payment = paymentRepository.findByPaymentId(paymentId)
+                .orElseThrow(() -> new NotFoundException("Payment ID: " + paymentId + " NOT FOUND"));
+
+        // Kiểm tra quyền truy cập
+        if (!payment.getBooking().getAccount().getUsername().equals(username)) {
+            throw new NotFoundException("Unauthorized access to payment ID: " + paymentId);
+        }
+
+        // Lấy trạng thái của payment
+        PaymentStatus paymentStatus = payment.getStatus();
+        response.put("status", paymentStatus.toString());
+
+        // Nếu trạng thái là APPROVED, lấy filmId từ Show
+        Booking booking = payment.getBooking();
+        if (paymentStatus == PaymentStatus.APPROVED) {
+            Long filmId = cinemaShowRepository.findById(booking.getShow().getId())
+                    .map(show -> show.getFilm().getId())
+                    .orElse(null);
+            response.put("filmId", String.valueOf(filmId));
+            response.put("message", "Payment completed successfully");
+        } else if (paymentStatus == PaymentStatus.PENDING) {
+            response.put("message", "Payment is still pending");
+        } else {
+            response.put("message", "Payment failed or was cancelled");
+        }
+
+        return response;
+    }
+
 }

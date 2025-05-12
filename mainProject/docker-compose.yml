@@ -1,36 +1,32 @@
-version: '3.8'
+name: ticketcinema
 
 services:
   backend:
-    image: ticketcinema-backend
     build:
       context: ./mainBackend/be-src
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    env_file:
-      - .env
-    environment:
-      - PORT=8080
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/ticketDB?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=kien123456
-      - VNPAY_TMN_CODE=S9J1L8QI
+    depends_on:
+      mysql:
+        condition: service_healthy
     container_name: ticketcinema-backend
     restart: unless-stopped
-    depends_on:
-      - mysql
 
   mysql:
     image: mysql:8.0
     environment:
       - MYSQL_ROOT_PASSWORD=kien123456
-      - MYSQL_DATABASE=ticketDB
-      - MYSQL_ROOT_HOST=%
+      - MYSQL_DATABASE=ticketdb
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     container_name: ticketcinema-mysql
     restart: unless-stopped
 
