@@ -73,7 +73,7 @@ public class AccountTemp implements UserDetails {
     private int times;
     @CreationTimestamp
     @Column(name = "create_at", nullable = false, updatable = false)
-    private Date create_at;
+    private LocalDateTime create_at;
 
     private LocalDateTime expiryTime;
 
@@ -157,7 +157,7 @@ public class AccountTemp implements UserDetails {
         this.times = times;
     }
 
-    public Date getCreateAt() {
+    public LocalDateTime getCreateAt() {
         return this.create_at;
     }
 

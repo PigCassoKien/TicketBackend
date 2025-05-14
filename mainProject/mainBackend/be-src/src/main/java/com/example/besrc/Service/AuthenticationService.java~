@@ -24,6 +24,4 @@ public interface AuthenticationService {
     MyApiResponse verifyPasswordResetOtp(String email, String code);
 
     MyApiResponse resetPassword(String email, String code, String password);
-
-    MyApiResponse resendVerificationEmail(String email, String purpose);
 }

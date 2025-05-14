@@ -417,7 +417,7 @@ public class AuthenticationServiceImplement implements AuthenticationService {
         }
 
         Optional<VerificationCode> existingOtp = verificationCodeRepository.findByEmail(email);
-        if (existingOtp.isPresent() && existingOtp.get().getCreateAt().plusMinutes(1).isAfter(LocalDateTime.now())) {
+        if (existingOtp.isPresent() && existingOtp.get().getCreate_at().plusMinutes(1).isAfter(LocalDateTime.now())) {
             throw new BadRequestException("Please wait 1 minute before requesting a new OTP");
         }
 

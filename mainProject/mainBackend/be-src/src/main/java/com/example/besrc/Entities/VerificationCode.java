@@ -20,6 +20,7 @@ public class VerificationCode {
 
     private String email;
     private String code;
+    private LocalDateTime createAt;
     private LocalDateTime expiryTime;
 
     public VerificationCode() {

@@ -13,7 +13,7 @@ services:
     container_name: ticketcinema-backend
     restart: no
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://ticketcinema-mysql:3306/ticketdb?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true  # Thêm allowPublicKeyRetrieval      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_URL: jdbc:mysql://10.1.1.74:3306/ticketdb?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true  # Thêm allowPublicKeyRetrieval      SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: kien123456
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
       SPRING_MAIL_USERNAME: kien0610minh@gmail.com

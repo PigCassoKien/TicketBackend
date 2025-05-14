@@ -39,6 +39,10 @@ public class Account implements UserDetails {
         }
     }
 
+//    public Account(Object o, String fullname, String username,
+//                   String encode, String phoneNumber, String address,
+//                   String email, String clientIp) {
+//    }
 
     public void setPhoneNumber(@NotBlank @NotNull String phoneNumber) {
         this.phoneNumber = phoneNumber;

@@ -134,13 +134,5 @@ public class AuthenticationController {
 
     }
 
-    @PostMapping("/verify/resend")
-    @Operation(summary = "Resend Verification Code", responses = {
-            @ApiResponse(responseCode = "200", description = "Resend successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyApiResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Email is not existed", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
-    })
-    public ResponseEntity<MyApiResponse> resendOtp(@RequestParam String email, @RequestParam String purpose) throws IOException {
-        return ResponseEntity.ok(authenticationService.resendVerificationEmail(email, purpose));
-    }
+    public ResponseEntity<MyApiResponse> resendOtp(@RequestParam String email) throws IOException {
 }
