@@ -1,6 +1,16 @@
-name: ticketcinema
-
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    container_name: ticketcinema-frontend
+    restart: no
+
+
   backend:
     build:
       context: ./mainBackend/be-src
@@ -11,13 +21,23 @@ services:
       mysql:
         condition: service_healthy
     container_name: ticketcinema-backend
-    restart: no
+    restart: unless-stopped
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://ticketcinema-mysql:3306/ticketdb?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true  # Thêm allowPublicKeyRetrieval      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_URL: jdbc:mysql://ticketcinema-mysql:3306/ticketdb?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: kien123456
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 30000
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_MAIL_USERNAME: kien0610minh@gmail.com
       SPRING_MAIL_PASSWORD: ivrt wssp oktn vprb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   mysql:
     image: mysql:8.0
@@ -28,12 +48,27 @@ services:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./database/ticketdb.sql:/docker-entrypoint-initdb.d/ticketdb.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     container_name: ticketcinema-mysql
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_HOST=ticketcinema-mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=kien123456
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    container_name: ticketcinema-phpmyadmin
     restart: unless-stopped
 
 volumes:

@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://ticketcinema-backend.onrender.com',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: true,
       },

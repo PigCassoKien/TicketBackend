@@ -26,6 +26,7 @@
     "react-router-dom": "^7.6.0",
     "react-slick": "^0.30.3",
     "react-swiper": "^0.1.5",
+    "react-toastify": "^11.0.5",
     "react-tooltip": "^5.28.1",
     "slick-carousel": "^1.8.1",
     "swiper": "^11.2.5"
