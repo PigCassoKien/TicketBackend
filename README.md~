@@ -25,11 +25,11 @@ https://github.com/PigCassoKien/TicketCinemaWeb
   - `jackson-databind` 2.15.0 for JSON serialization
 
 ## **Frontend**
-- **Core FrameWork**: React
-- **Routing**: React Router DOM
-- **Authentication**: JWT Decode
-- **HTTP Requests**: Axios.
-- **Styling**: Tailwind CSS
+- Core FrameWork: React
+- Routing: React Router DOM
+- Authentication: JWT Decode
+- HTTP Requests: Axios.
+- Styling: Tailwind CSS
 - Deployed using Nginx as a reverse proxy
 
 ## **Additional Tools**
@@ -48,10 +48,10 @@ https://github.com/PigCassoKien/TicketCinemaWeb
 1. Clone the repository to your local machine:
    ```shell
    git clone https://github.com/PigCassoKien/TicketCinemaWeb
+   cd mainproject
    ```
 2. Build and start the application:
    ```shell
-   cd mainProject
    docker-compose up --build -d
    ```
    - This command builds the frontend (React), backend (Spring Boot), and MySQL database containers.
