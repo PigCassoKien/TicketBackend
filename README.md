@@ -83,7 +83,7 @@ https://github.com/PigCassoKien/TicketCinemaWeb
 |---------------------|---------------  |---------------|
 | superadmin          | SuperAdmin123!  | Super Admin   |
 | kienduong123        | 4Conthanlan@    | Admin         |
-| uuserr111           | 5Conthanlan@    | User          |
+| userr111            | 5Conthanlan@    | User          |
 - Alternatively, you can register a new USER account through the registration interface.
 - *NOTE*: The email must be valid in order to receive the OTP verification code. 
 
